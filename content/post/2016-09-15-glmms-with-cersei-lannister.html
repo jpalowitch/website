@@ -1,0 +1,824 @@
+---
+title: GLMMs with Cersei Lannister
+author: ~
+date: '2016-09-15'
+slug: glmms-with-cersei-lannister
+categories: []
+tags: []
+---
+
+
+
+<p>This post is mostly for people who know a bit about doing statistics and want a primer on mixed-effects models. I’ve used the plainest language possible throughout, so even if you don’t fit that bill, you might still find it readable. At the very least, you’ll get to laugh at my nerdy attempts to make statistics more entertaining to non-experts. My main goals are:</p>
+<ol style="list-style-type: decimal">
+<li>Give accessible examples (the last being an online services simulation) of fitting mixed-effects models in <strong>R</strong></li>
+<li>Discuss the interpretation of and motivation for mixed effects models</li>
+<li>Provide short, educational GOT fan-fic, with pictures</li>
+</ol>
+<p>Some of what follows is in response to a <a href="http://www.unofficialgoogledatascience.com/2016/03/using-random-effects-models-in.html">great post</a> from folks at Google. They show a cool result about the predictive efficacy of a mixed-effects model, so I decided to try a related experiment. However, their interpretation of the model was not thorough enough for me, particularly in distinguishing it from a Bayesian approach. So I’ll be discussing this as well.</p>
+<p>I provide some code I used in-line, but not all of it. The code I provide in-line is associated with the <strong>R</strong> library I chose to fit the mixed models, called <code>lme4</code>, and is meant to display its basic functionality. The rest (and majority) of the code is available upon request.</p>
+<p>Hat tip to <a href="http://fantasynamegenerators.com/got-westeros-names.php#.V8RQeSgrKUk">this cool website</a> for providing me endless Westeros-style names to use for the first example. In this example, I go over what it means to have different experimental units in a regression model. This is an important concept to understand why we might want to use a mixed-model in the first place. Enter the Lannister family:</p>
+<div id="jaimes-archers" class="section level1">
+<h1>Jaime’s archers</h1>
+<p>Jaime was preparing for a long journey, on official Lannister business. Knowing that things would likely come to swords, he assembled a small force to accompany him. He had some time to take special care in outfitting his troops, so he decided to run an experiment with two different kinds of bows.</p>
+<p>Normally, Lannister forces use bows made from Northwood, as common knowledge says they are stronger than Southwood bows. However, since Jaime is a Southerner, he prefers Southwood bows out of pride and convenience. He wanted to see if use of Southwood bows cause a statistically significant difference in archer range.</p>
+<p>So, he chose three archers randomly from the kingdom’s forces, who each would shoot a Northwood bow and a Southwood bow 10 times. He bullied some local city-folk into measuring and recording the distance of the shots, in meters. Some of the resulting data is shown below:</p>
+<pre><code>##   Distance_      Bow_          Name_
+## 1       163 Northwood Deonte Skinner
+## 2       163 Northwood Deonte Skinner
+## 3       159 Northwood Deonte Skinner
+## 4       149 Northwood Deonte Skinner
+## 5       152 Northwood Deonte Skinner
+## 6       155 Northwood Deonte Skinner</code></pre>
+<p>The other two archers were named Fabiar Darklyn and Margan Drumm. Jaime chose to fit the following linear regression model to his experiment’s data: <span class="math display">\[
+Y_{ik} = \mu + \tau\mathbb{1}(i = 2) + \epsilon_{ik}
+\]</span> Above, <span class="math inline">\(Y_{ik}\)</span> is the <span class="math inline">\(k\)</span>-th shot from bow <span class="math inline">\(i = 1,2\)</span>, and the Southwood bow is considered to be the second bow. The variables <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\tau\)</span> represent (respectively) the mean shot distance and mean effect of the Southwood bow. The final term <span class="math inline">\(\epsilon_{ik}\)</span> is the random error (the Winds of Westeros, perhaps) contributing to the <span class="math inline">\(k\)</span>-th shot from the <span class="math inline">\(i\)</span>-th bow. There are <span class="math inline">\(3\times 10 = 30\)</span> shots per bow, since each markman shoots each bow 10 times. The errors are independent shot-to-shot and Normally distributed with constant variance <span class="math inline">\(\sigma^2_e\)</span>. Here’s the summary of Jaime’s analysis:</p>
+<pre class="r"><code>lm0 &lt;- lm(Distance_ ~ Bow_, data = JaimeExp1$Data)
+summary(lm0)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Distance_ ~ Bow_, data = JaimeExp1$Data)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -25.84 -15.59 -10.21  23.75  34.70 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)    167.885      3.678  45.643   &lt;2e-16 ***
+## Bow_Southwood   -9.767      5.202  -1.878   0.0655 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 20.15 on 58 degrees of freedom
+## Multiple R-squared:  0.0573, Adjusted R-squared:  0.04105 
+## F-statistic: 3.526 on 1 and 58 DF,  p-value: 0.06546</code></pre>
+<p>We see that when the archers switched to a Southwood bow, their shot distances decreased by about 10 meters, on average. However, Jaime realized his p-value was not below that magical 5% threshold! He strutted merrily out of the experiment grounds, confident that his results <em>must</em> be due purely due to unfair winds. (Clearly, Jaime was absent for some important Statistical Lectures of the Crown.)</p>
+<div class="figure">
+<img src="jaime.jpg" alt="A most excellent result" />
+<p class="caption"><em>“A most excellent result”</em></p>
+</div>
+<div id="adding-archer-terms" class="section level2">
+<h2>Adding archer terms</h2>
+<p>He was, of course, stopped by his brother Tyrion, who observed the whole experiment. “Now Jaime, can’t you see that you chose archers of wildly different statures? Only a fool would not account for this in his analysis.” Grumpily, Jaime re-fit his model with additional terms for the archers:</p>
+<p><span class="math display">\[
+Y_{ijk} = \mu + \tau\mathbb{1}(i = 2) + \alpha_j + \epsilon_{ik}
+\]</span></p>
+<p>Above, <span class="math inline">\(Y_{ijk}\)</span> is the <span class="math inline">\(k\)</span>-th shot (now <span class="math inline">\(k\)</span> goes from 1 to 10) from the <span class="math inline">\(j\)</span>-th archer when he is using the <span class="math inline">\(i\)</span>-th bow. The <span class="math inline">\(\alpha_j\)</span> parameters represent archer <span class="math inline">\(j\)</span>’s baseline skill. Here were Jaime’s results, using the new model:</p>
+<pre class="r"><code>lm1 &lt;- lm(Distance_ ~ Bow_ + Name_, data = JaimeExp1$Data)
+summary(lm1)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Distance_ ~ Bow_ + Name_, data = JaimeExp1$Data)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -10.1652  -3.4554  -0.5064   2.5754  13.1611 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)          156.427      1.238 126.386  &lt; 2e-16 ***
+## Bow_Southwood         -9.767      1.238  -7.891 1.17e-10 ***
+## Name_Fabiar Darklyn   38.585      1.516  25.454  &lt; 2e-16 ***
+## Name_Margan Drumm     -4.212      1.516  -2.779  0.00741 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.794 on 56 degrees of freedom
+## Multiple R-squared:  0.9485, Adjusted R-squared:  0.9457 
+## F-statistic: 343.6 on 3 and 56 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>(A small detail you’ll notice above is that there is no estimate for the 1st archer effect. The estimate of that effect is couched in the Intercept term; to predict shot distance from the 1st archer, we simply leave out all archer terms).</p>
+<p>After accounting for the different archer, the estimated effect of the Southwood bow became extremely statistically significant. These results weren’t as pleasing to Jaime, who stormed past a smirking Tyrion. “Well? What read your results?” he heard as he slammed the training field gate behind him.</p>
+<p>So what happened? In truth, there are two separable sources of error around the bow effect: per-shot random error, and variance among archer shooting strengths. Jaime (well, actually Tyrion) controlled for this in the second model by including archer effects.</p>
+<div class="figure">
+<img src="tyrion.png" alt="I have some experience in these matters" />
+<p class="caption"><em>“I have some experience in these matters”</em></p>
+</div>
+<p>If you’ve never encountered this statistical situation before, a visualiation can help illustrate why it’s important to include archer effects, or in general, “experimental unit” effects. Here’s what Jaime’s data looks like, without knowledge of the particular archer:</p>
+<pre><code>## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.</code></pre>
+<p><img src="/post/2016-09-15-glmms-with-cersei-lannister_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>The red shots look somewhat above the blue shots, but something’s fishy. The shot points seem to be layered, somehow. Now let’s shape the points differently for different archer:</p>
+<pre><code>## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.</code></pre>
+<p><img src="/post/2016-09-15-glmms-with-cersei-lannister_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Now we can see clearly that the red shots are usually higher than the green shots, and the shots cluster around distinct locations that depend on the marksman. By including marksman terms in our model, we’re able to estimate the noise variance around the <em>marksman</em> centers, rather than the overall center. This is beneficial from (at least) two standpoints:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Interpretation</strong>: the variance due to archer skill is clearly not random error (Winds of Westeros), so a model that does not account for the marksman will give a highly innacurate estimate of the per-shot variance.</li>
+<li><strong>Estimation of <span class="math inline">\(\tau\)</span></strong>: Loosely speaking, we are better able to “see” the effect of the Southwood bow when we separate the shots by marksman.</li>
+</ol>
+<p>After cooling down a little, Jaime realized that (despite not achieving the result he desired) his findings could be of use to the Lannister army. He decided to run a larger experiment with 50 archers to solidify the results. Here was the outcome:</p>
+<pre class="r"><code>lm2 &lt;- lm(Distance_ ~ Bow_ + Name_, data = JaimeExp2$Data)
+summary(lm2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Distance_ ~ Bow_ + Name_, data = JaimeExp2$Data)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -15.4424  -3.3524  -0.1689   3.2859  14.8538 
+## 
+## Coefficients:
+##                        Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)            168.8198     1.1263 149.883  &lt; 2e-16 ***
+## Bow_Southwood          -10.4792     0.3154 -33.221  &lt; 2e-16 ***
+## Name_Aldo Apperford    -12.2736     1.5772  -7.782 1.86e-14 ***
+## Name_Antorn Feller      34.5155     1.5772  21.884  &lt; 2e-16 ***
+## Name_Arren Durrandon    29.3949     1.5772  18.637  &lt; 2e-16 ***
+## Name_Ashtin Orme        11.5839     1.5772   7.345 4.44e-13 ***
+## Name_Barret Foral      -16.6079     1.5772 -10.530  &lt; 2e-16 ***
+## Name_Barrock Ryswell     6.4531     1.5772   4.091 4.65e-05 ***
+## Name_Brack Mallister   -53.4039     1.5772 -33.860  &lt; 2e-16 ***
+## Name_Brandeth Erenford   6.1860     1.5772   3.922 9.41e-05 ***
+## Name_Brayan Trante     -35.2405     1.5772 -22.344  &lt; 2e-16 ***
+## Name_Charres Apperford   0.3317     1.5772   0.210 0.833494    
+## Name_Clarrik Parge       8.2105     1.5772   5.206 2.37e-07 ***
+## Name_Codin Sadelyn      37.8102     1.5772  23.973  &lt; 2e-16 ***
+## Name_Culler Vyrwel       6.8461     1.5772   4.341 1.57e-05 ***
+## Name_Curtass Shiphard  -33.6791     1.5772 -21.354  &lt; 2e-16 ***
+## Name_Denzin Garner     -21.6985     1.5772 -13.758  &lt; 2e-16 ***
+## Name_Deran Swygert       5.3668     1.5772   3.403 0.000695 ***
+## Name_Donnal Brackwell  -18.5525     1.5772 -11.763  &lt; 2e-16 ***
+## Name_Dontar Brask        3.0880     1.5772   1.958 0.050534 .  
+## Name_Dran Kenning       -4.3976     1.5772  -2.788 0.005406 ** 
+## Name_Dwan Plumm        -14.3560     1.5772  -9.102  &lt; 2e-16 ***
+## Name_Eddard Meadows    -24.9352     1.5772 -15.810  &lt; 2e-16 ***
+## Name_Erock Conklyn      11.5451     1.5772   7.320 5.28e-13 ***
+## Name_Evin Rane         -33.1439     1.5772 -21.014  &lt; 2e-16 ***
+## Name_Fabiar Darklyn    -33.2426     1.5772 -21.077  &lt; 2e-16 ***
+## Name_Harden Blest      -30.0566     1.5772 -19.057  &lt; 2e-16 ***
+## Name_Howar Clifton      -2.6749     1.5772  -1.696 0.090221 .  
+## Name_Jaesse Cantell    -15.7270     1.5772  -9.971  &lt; 2e-16 ***
+## Name_Jares Grell         3.6472     1.5772   2.312 0.020966 *  
+## Name_Jarvas Bywater      8.6005     1.5772   5.453 6.32e-08 ***
+## Name_Jeffary Mudd       -4.4122     1.5772  -2.797 0.005254 ** 
+## Name_Jeran Parsin       -8.9081     1.5772  -5.648 2.14e-08 ***
+## Name_Kober Maeson       -5.4609     1.5772  -3.462 0.000559 ***
+## Name_Koryn Staunton     32.5297     1.5772  20.625  &lt; 2e-16 ***
+## Name_Marak Herston     -51.0331     1.5772 -32.357  &lt; 2e-16 ***
+## Name_Mikal Netley      -11.2779     1.5772  -7.151 1.72e-12 ***
+## Name_Mykal Ryser       -21.1308     1.5772 -13.398  &lt; 2e-16 ***
+## Name_Nelsor Baxter     -19.2805     1.5772 -12.225  &lt; 2e-16 ***
+## Name_Portar Parge       36.7979     1.5772  23.331  &lt; 2e-16 ***
+## Name_Raman Brakker      36.6719     1.5772  23.251  &lt; 2e-16 ***
+## Name_Randar Condon      -4.3076     1.5772  -2.731 0.006428 ** 
+## Name_Roberd Spyre        3.6156     1.5772   2.292 0.022098 *  
+## Name_Rolan Morrass      25.9665     1.5772  16.464  &lt; 2e-16 ***
+## Name_Samn Whitehill    -18.9911     1.5772 -12.041  &lt; 2e-16 ***
+## Name_Sarrac Ridman      -9.2904     1.5772  -5.890 5.34e-09 ***
+## Name_Seamas Knigh        3.9833     1.5772   2.526 0.011713 *  
+## Name_Seldan Harker     -21.1080     1.5772 -13.383  &lt; 2e-16 ***
+## Name_Sharun Mudd       -27.9034     1.5772 -17.692  &lt; 2e-16 ***
+## Name_Zandren Kneight   -53.3039     1.5772 -33.797  &lt; 2e-16 ***
+## Name_Zarin Goodbrother -21.9110     1.5772 -13.892  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.988 on 949 degrees of freedom
+## Multiple R-squared:  0.9585, Adjusted R-squared:  0.9564 
+## F-statistic: 438.8 on 50 and 949 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>Having disregarded much of his scientific education, Jaime felt quite overwhelmed with this massive list of parameter estimates. In particular, he was confused by the few archers without a statistically significant estimate. Should he re-run the experiment without them?</p>
+<p>(If you’re wondering why all the estimated standard errors for the archer effect estimates are the same, it’s because they all fired the same number of shots. Intuitively, this means we should have the same amount of certainty in each estimate.)</p>
+<p>This time, Cersei happened to be hanging out around the training grounds. Overhearing his concerns, she decided to step in. “Jaime, don’t trouble yourself with those worrisome parameter estimates for the archer. I looked at your charts from the first experiment. It is certainly proper to account for archers in the model, but the only quantity we should care about right now is the <em>variance</em> of their skills.” Later that afternoon she developed Westeros’s first Linear Mixed Effects model, in which archer effects are considered to be random draws from a larger population.</p>
+<div class="figure">
+<img src="cersei.jpg" alt="With these equations I shall secure the reputation of the Lannister name in both might and maths" />
+<p class="caption"><em>“With these equations I shall secure the reputation of the Lannister name in both might and maths”</em></p>
+</div>
+</div>
+<div id="the-mixed-effects-model-and-randomness-therein" class="section level2">
+<h2>The mixed-effects model and randomness therein</h2>
+<p>Cersei’s key observation is that Jaime chose 50 archers out of the large population of archers in and around King’s Landing. Furthermore, he did so in a random fashion, caring only to distribute the bow test across a representative population of archers. In this sense, the archer effects are random. We can incorporate this in the model, by treating them as Normal random variables with a common, fixed variance: <span class="math display">\[
+Y_{ijk} = \mu + \tau\mathbb{1}(i = 2) + \alpha_j + \epsilon_{ik}\;\;\;\;\;\;\;\;\;\;\;\;\;\;\alpha_j\sim\mathcal{N}(0, \sigma^2_a)
+\]</span> The <span class="math inline">\(\alpha_j\)</span>’s are now not of interest to estimate. They exist simply to separate out the contribution of marksman skill to per-shot variance. This “variance component”, <span class="math inline">\(\sigma^2_a\)</span>, is now the archer parameter of interest.</p>
+<p>It is important to realize that, though we model the <span class="math inline">\(\alpha_j\)</span>’s as random, they do not change shot-to-shot. From a physical perspective, they are still fixed features of the archer. We regard them as random only to focus on the underlying distribution of archer skill, and its effect on the predictive model.</p>
+<div id="random-effects-vs.bayesian-randomness" class="section level3">
+<h3>Random-effects vs. Bayesian randomness</h3>
+<p><strong>Wait, if the parameters are random, isn’t this a Bayesian model?</strong> This is a reasonable question. One easy answer is that the bow effect is fixed, so it doesn’t make sense to give some parameters a Bayesian treatment and not others. But there are mixed-effects models that have no fixed parameters (usually termed “random-effects” models), so the distinction is more fundamental.</p>
+<p>Here’s one perspective on the difference. As mentioned above, the parameters in a mixed model get their randomness from the unit (marksman) sampling process. In this sense, they are <em>objectively</em> random, because there is a real population (large enough to be considered infinite) of parameters being sampled from. In a Bayesian model, however, parameters are <em>subjectively</em> random in the sense that their prior and posterior distributions are meant to quantify our <em>personal uncertainty</em> about their values.</p>
+<p>These are distinct conceptions of randomness. In fact, it is possible to model the random effects in a mixed-effects model as, additionally, subjectively random with respect to their values. Thus, we can fit either a fixed-effects or mixed-effects model each with a fully Bayesian approach. The choice to employ a mixed-effects model in the first place still exists in the Bayesian framework, and depends on all the same aspects of our modeling goals.</p>
+<p>Let’s map out the Bayesian approach to our two types of models. Look back at the full fixed-effects model we considered for the bow experiments. In the most straightforward Bayesian framework, we would specify a conjugate set of of priors distributions: Normal for <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\tau\)</span>, and the <span class="math inline">\(\alpha_j\)</span>’s, and Inverse Gamma for <span class="math inline">\(\sigma^2_e\)</span>.</p>
+<p>For the full mixed-effects model, however, it sort of looks like we already have a prior on the <span class="math inline">\(\alpha\)</span>’s. I would argue that this is an abuse of the term “prior”. The Normal distribution on the <span class="math inline">\(\alpha\)</span>’s still represents the <em>sampling</em> uncertainty in the model. In our Gibbs sampler, it is used to update the <span class="math inline">\(\alpha\)</span>’s, but if we store the <span class="math inline">\(\alpha\)</span>’s what we end up with should not be interpreted as a posterior distribution of a fixed parameter.</p>
+<p>This is not merely a semantic difference: in the Bayesian approach to our mixed-effects model, we would need a prior on <span class="math inline">\(\sigma^2_a\)</span>, since that is the archer parameter of interest. In the Bayesian fixed-effects model, we gave the <span class="math inline">\(\alpha\)</span>’s Normal priors directly, and <span class="math inline">\(\sigma^2_a\)</span> was a fixed hyperparameter.</p>
+<p>But the semantic distinctions are important too. It would be inappropriate, for instance, to talk about Bayes Factors or credible intervals associated with the <span class="math inline">\(\alpha\)</span>’s, since from a modeling perspective we have decided not to treat them as values to estimate or do inference upon.</p>
+</div>
+<div id="when-not-to-use-a-mixed-effects-model" class="section level3">
+<h3>When not to use a mixed-effects model</h3>
+<p><strong>What’s special about this sampling situation? Aren’t we always picking experimental units out of a larger population?</strong> Yes, but we don’t always do so randomly. Often, we care about particular units of interest that we already know about before the experiment, so we pick them directly. There’s nothing random about this process. Also, if we have that sort of interest in the units, usually estimating their effects is an important goal of the analysis, in which case we should not model the effects as random.</p>
+<p>For instance, Jaime might care to (at the same time) estimate the skills of a few archer he knows about. In this case, he’d probably hand-pick fewer archer (like in his first experiment), and have them take more shots. As a more realistic example, consider a small school district doing some sort of standardized test analysis on their three middle schools. There will be many, many observations from each middle school, and the district is not necessarily interested in considering the larger population of middle schools. Their aim is to build a predictive model for their particular district, and do inference on parameters for their schools only.</p>
+</div>
+</div>
+<div id="fitting-the-mixed-effects-model" class="section level2">
+<h2>Fitting the mixed-effects model</h2>
+<p>Alright, enough philosophy. What can mixed effects modeling actually do for us, from an inferential or decision-based standpoint? First, let’s fit the model to Jaime’s 2nd set of experimental data:</p>
+<pre class="r"><code>lme2 &lt;- lmer(Distance_ ~ Bow_ + (1 | Name_), data = JaimeExp2$Data)</code></pre>
+<p>The switch to mixed effects modeling shifts the focus from inference on the individual archer to inference on the population of archers. This focus is important in applications from many fields, like biology (where observations may come from many organisms), economics (where observations may come from many regions or agents), or clinical trials (where observations may come from many different labs). In our example, it makes a lot of sense for Cersei to want to learn about the variance in city-wide marksman skill along with the effect of Southbows. The estimate <span class="math inline">\(\hat\sigma^2_a\)</span> gives her precisely this, and she won’t get that from the fixed-effects model:</p>
+<pre class="r"><code>VarCorr(lme2)</code></pre>
+<pre><code>##  Groups   Name        Std.Dev.
+##  Name_    (Intercept) 22.9698 
+##  Residual              4.9875</code></pre>
+<pre class="r"><code>confint(lme2)[1:2, ]</code></pre>
+<pre><code>##            2.5 %    97.5 %
+## .sig01 18.907078 28.054556
+## .sigma  4.768896  5.217741</code></pre>
+<p>The output above gives the estimates for <span class="math inline">\(\sigma_a\)</span> and <span class="math inline">\(\sigma_e\)</span>, and the assocated confidence intervals.</p>
+<div id="using-the-model-to-choose-archer" class="section level3">
+<h3>Using the model to choose archer</h3>
+<p>“But wait,” Jaime might protest, “what if I care about the particular archer I happened to put to task? I now accept that Northwood bows are the obvious choice, but how does our model help me choose which men to take on my journey? Cersei’s focus on the population isn’t specific enough. At least with the fixed effects model I had parameter estimates!”</p>
+<p>Actually, a mixed effects model can rank the units (archers) in a functionally identical way. Once the model is fit, we can calculate the <em>conditional expectation</em> of a particular archer’s effect, given his experimental data. This can operate as a skill score for the archer: <span class="math display">\[
+\text{Score for archer }j = \mathbb{E}\left[\alpha_j | \bar y_{j\cdot}\right]
+\]</span> Above, <span class="math inline">\(\bar y_{j\cdot}\)</span> is the <span class="math inline">\(j\)</span>-th archer’s average shot distance. Remember, in our model, each <span class="math inline">\(\alpha_j\)</span> is random, with mean zero. So taking expectations shouldn’t seem useful, at first. However, knowledge of our experimental data biases our expectation of <span class="math inline">\(\alpha_j\)</span>, depending on where the data fall relative to the overall mean. The above quantity is often taken as a “predictor” of <span class="math inline">\(\alpha_j\)</span>, and archers with higher <span class="math inline">\(\bar y_{j\cdot}\)</span>’s have higher predictions. As it turns out, the predictions are exactly correlated with the parameter estimates from the fixed-effects model:</p>
+<pre class="r"><code>predictions &lt;- ranef(lme2)$Name_[-1, ]
+estimates &lt;- unname(coef(lm2)[-c(1:2)])</code></pre>
+<pre><code>## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.</code></pre>
+<p><img src="/post/2016-09-15-glmms-with-cersei-lannister_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>The line <span class="math inline">\(y = x\)</span> is shown. The linear shift between the points is due only to the fact that the fixed-effects parameter estimates are not constrained to sum to zero. This exact correspondence between the estimates and conditional expectations is always true, as long as both models contain the same terms. So, the difference is in interpretation. I personally like the “prediction” interpretation better for Jaime’s purposes, since he’s planning for a future journey.</p>
+<p>Another benefit of the mixed model is that the intercept parameter <span class="math inline">\(\mu\)</span> is directly interpretable as the mean of the effects <em>population</em> using the Northwood bow (and <span class="math inline">\(\mu + \tau\)</span> for the Southwood bow). Therefore, our estimate for <span class="math inline">\(\mu\)</span> also speaks to the broad population of archer. This is not the case for our fixed-effects model. In that model, <span class="math inline">\(\mu\)</span> is just an intercept. Usually, it doesn’t even correspond to the true response mean of the experimental units (although it can be forced to with some parameter contstraints).</p>
+<p>To briefly reprise the Bayesian discussion, all these characteristics of mixed-effects models hold under the Bayesian approach, as well. We can compute MCMC posterior conditional means for the <span class="math inline">\(\alpha\)</span>’s, and examine the posterior distributions for <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\tau\)</span>, and variance components. The choice between mixed-effects and fixed-effects modeling has little to do with the choice between a frequentist and Bayesian approach to parameter estimation.</p>
+</div>
+<div id="what-about-tau" class="section level3">
+<h3>What about <span class="math inline">\(\tau\)</span>?</h3>
+<p>At least for linear models, parameter and standard error estimates for fixed effects in the mixed model are the same as what they would be in the full fixed-effects model fit. However, in today’s big-data world, we should also be comparing the mixed-models approach to a <em>penalized</em> fixed-effect fit. The Google blog post did so on a real, large-scale internet data set, and found that the mixed-effects model had slightly higher predictive power with respect to log-likelihoods.</p>
+<p>My first guess at an explanation for this was that we don’t necessarily want to shrink effect estimates from experimental units, as fixed-effects models with a penalty would. Look back at the fixed-effect fit from Jaime’s second experiment. Many of the archer parameters aren’t significant. But as we saw from our exploratory plots with just three archers, we still need to account for those units’ baseline skills. The mixed-effect fit does this, but a (say) LASSO-penalized fixed-effect fit may not.</p>
+<p>A major goal of this post was to dig into this comparison of fitting mixed-effects and penalized fixed-effects models, on a large-scale, real-world, binary data set. In the next section, I follow through on this.</p>
+</div>
+</div>
+</div>
+<div id="a-large-scale-example" class="section level1">
+<h1>A large-scale example</h1>
+<p>Let’s say you work for a company that provides many online services. Your team is trying to decide between two versions of a general ad display module for a webpage. The metric for display effectiveness is the proportion of times a user interacts with (“clicks-through”) the ad out of the number of times she sees it (“impressions”). Higher click-through rate (CTR) is good because it means companies who pay for ad placement will get more out of their purchase.</p>
+<p>An appropriate model for this situation is a logistic regression. In this model, each user <span class="math inline">\(j\)</span> encounters the <span class="math inline">\(i\)</span>-th version of the display <span class="math inline">\(n_{ij}\)</span> times, and has some probability <span class="math inline">\(p_{ij}\)</span> of clicking on some part of it each time. This <span class="math inline">\(p_{ij}\)</span> will depend on which version of the display user <span class="math inline">\(j\)</span> is currently in front of. For simplicity (and for analogy to the GOT story), let’s say there are only two versions, although we can fit the same model with many versions. We’ll include a parameter <span class="math inline">\(\tau\)</span> in our model representing the (fixed) effect of the new display version. The click probability <span class="math inline">\(p_{ij}\)</span> will also depend on the user and how “clicky” they are. The <span class="math inline">\(\alpha_j\)</span> parameter will be user <span class="math inline">\(j\)</span>’s clickiness effect, and is analogous to archer skill from the GOT example.</p>
+<p>I’ll add an additional simulation level to generate the number of total impressions (from either display) at random from a Poisson distribution with <span class="math inline">\(\lambda = 20\)</span>. Additionally, we need a coin flip variable which chooses the “treatment” users. Finally, I diverted a (randomly chosen) latter portion of the treatment users’ impressions to the second display.</p>
+<p>Given the <span class="math inline">\(n_{ij}\)</span>’s, the simulation model is written as follows: <span class="math display">\[
+Y_{ij}\sim\text{Binomial}(p_{ij}, n_{ij}),\;\;\;\;\;\;\log\left(\frac{p_{ij}}{1 - p_{ij}}\right) = \mu + \tau\mathbb{1}(i = 2) + \alpha_j,\;\;\;\;\;\;\alpha_j\sim\text{Normal}(0, \sigma^2)
+\]</span></p>
+<p>I generated data from 1,000 users with the following parameters:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\tau\)</span></td>
+<td>0.5</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\mu\)</span></td>
+<td>-4.5</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\sigma\)</span></td>
+<td>5</td>
+</tr>
+</tbody>
+</table>
+<p>The data I generated looks like this:</p>
+<pre><code>##    clicks expos display  id
+## 1       3     7       2 990
+## 2       0    23       1 508
+## 3       0    12       1 940
+## 4       1    14       1 956
+## 5       3     9       2 437
+## 6       0     8       2 601
+## 7       0    21       1 235
+## 8       0    17       2 458
+## 9       0    10       1 198
+## 10      0    19       1 190</code></pre>
+<p>Note that the data is quite sparse, in the sense that users rarely click on the display overall. This is due to my low setting of the parameter <span class="math inline">\(\mu\)</span>. I thought this setting was realistic, since presumably there would be many other actions users could take on the site.</p>
+<p>Let’s fit a logistic mixed-effect regression model to the data. This model is one of many known as “generalized linear mixed-effects models” (GLMMs). The terminology is meant to express that the response is no longer a linear function of the parameters, but is related to one by some transformation. The <code>lme4</code> package in <strong>R</strong> includes the function <code>glmer</code> which includes many options for fitting GLMMs.</p>
+<p>The format of Binomial data in <strong>R</strong> is always important to consider. Somehow, the function you use must know both the response and the number of trials. For <code>glmer</code> (and <code>glm</code>, the fixed-effects version), we enter the exposure in the <code>weights</code> argument, and the response must be in proportion format. Here’s the setup and function call:</p>
+<pre class="r"><code># Changing the counts to proportions
+CTRdata$clicks &lt;- CTRdata$clicks / CTRdata$expos
+
+# Analysis of the data
+CTR_lme1 &lt;- glmer(clicks ~ display + (1 | id), 
+                  weights = expos,
+                  data = CTRdata, 
+                  family = binomial, 
+                  control = glmerControl(optimizer = &quot;bobyqa&quot;),
+                  nAGQ = 10)</code></pre>
+<p>I set the final two arguments by the recommendation of <a href="http://www.ats.ucla.edu/stat/r/dae/melogit.htm">this detailed and helpful guide to Binomial GLMMs</a> in <strong>R</strong>. They have to do with some particulars of the model fitting algorithm that are beyond the scope of this post. Here’s the model fit summary:</p>
+<pre class="r"><code>summary(CTR_lme1)</code></pre>
+<pre><code>## Generalized linear mixed model fit by maximum likelihood (Adaptive
+##   Gauss-Hermite Quadrature, nAGQ = 10) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: clicks ~ display + (1 | id)
+##    Data: CTRdata
+## Weights: expos
+## Control: glmerControl(optimizer = &quot;bobyqa&quot;)
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##   3022.9   3038.8  -1508.5   3016.9     1478 
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -1.54294 -0.19655 -0.14516  0.06813  1.87821 
+## 
+## Random effects:
+##  Groups Name        Variance Std.Dev.
+##  id     (Intercept) 32.57    5.707   
+## Number of obs: 1481, groups:  id, 1000
+## 
+## Fixed effects:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -4.99347    0.27445 -18.195  &lt; 2e-16 ***
+## display      0.51530    0.08254   6.243  4.3e-10 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Correlation of Fixed Effects:
+##         (Intr)
+## display -0.094</code></pre>
+<p>We see that our p-value for the display effect is orders of magnitude smaller than needed for a usual declaration of significance. This is both surprising and not surprising. It is surprising because the true display effect tau <span class="math inline">\(\tau\)</span> was just 10% of the population standard deviation of the user population effect. This means that even at the <em>mean</em> level of the model, the display-efficacy signal is being dominated by something completely random and 10x stronger. But it is also not surprising since I simulated so much data: 10,000 users with 20 exposures (on average) is 200,000 data points. So, this result reflects the well-known correspondence between statistical significance and sample size.</p>
+<p>Now, in a logistic model, <a href="https://en.wikipedia.org/wiki/Logit">a linear change on the logit scale is the same change in the log-odds ratio</a>. So we can say that our estimated change in odds of a display click induced by the display is 100% * <span class="math inline">\(\exp(\hat\tau)\)</span>. We can (and should) also map the upper and lower confidence bounds on <span class="math inline">\(\hat\tau\)</span> to that scale. Just for kicks, let’s do that for the other fixed effects too, namely, the population mean <span class="math inline">\(\mu\)</span> and population standard deviation <span class="math inline">\(\sigma_a^2\)</span>:</p>
+<pre class="r"><code># Extracting estimated fixed effects
+fixef_hat &lt;- fixef(CTR_lme1)
+# Extracting estimated population sd:
+siga_hat &lt;- attr(VarCorr(CTR_lme1)[[1]], &quot;stddev&quot;)
+# Extracting tau confidence bounds from model
+up_low &lt;- confint(CTR_lme1)
+
+# Making CI mat
+full_mat &lt;- cbind(&quot;Estimate&quot; = c(fixef_hat, siga_hat), up_low[c(2:3, 1), ])
+rownames(full_mat) &lt;- c(&quot;Intercept&quot;, &quot;Tau&quot;, &quot;sig_a&quot;)
+print(exp(full_mat) * 100, digits = 4)</code></pre>
+<pre><code>##            Estimate     2.5 %    97.5 %
+## Intercept 6.782e-01     0.386     1.135
+## Tau       1.674e+02   142.472   196.918
+## sig_a     3.011e+04 17688.802 54082.326</code></pre>
+<p>So we see that the new display causes an estimated change in click odds of about 167%. Considering that <span class="math inline">\(\exp(0.5) \approx 1.65\)</span>, this is not too far from where I set the true effect. The interpretation of our <span class="math inline">\(\mu\)</span> estimate is that the baseline click odds are (with high confidence) less than 1% of those of getting heads on a fair coin flip. Our <span class="math inline">\(\sigma_a\)</span> estimate tells us that user “clickability” variance is about 100x larger than the display effect, on the log-odds scale. As mentioned, since we have a lot of data we can still detect the display effect.</p>
+<div id="accuracy-and-speed-of-the-mixed-effects-model" class="section level3">
+<h3>Accuracy and speed of the mixed effects model</h3>
+<p>In this last section, I compare the performance of the Binomial GLMM to that of standard fixed-effects models, with respect to both predictive potential and compuation time.</p>
+<p>The first fixed-effect modeling approach I tried is the LASSO, which is an overwhemingly common method for dimension reduction in big data applications. The full interpretation of a LASSO model is well beyond the scope of this post. For the time being, it will do to say that, loosely speaking, the LASSO penalty zeros out user coefficients for users with effects not significantly different from the mean user effect. This is of interest in other situations when we care about values of user coefficients. But, as we will see, this aspect of the LASSO may not be beneficial in this setting.</p>
+<p>Fitting a LASSO is a little tricky in <strong>R</strong> if you have multi-level factor variables, especially if one of the variables has many, many levels (like our “user” variable). In case you’re interested in the best way to do this, I’ll print this chunk of code:</p>
+<pre class="r"><code>library(glmnet)</code></pre>
+<pre><code>## Loading required package: foreach</code></pre>
+<pre><code>## Loaded glmnet 2.0-13</code></pre>
+<pre class="r"><code>id.matrix &lt;- sparse.model.matrix(~ CTRdata$id - 1)
+Sparse.Data &lt;- cBind(id.matrix, CTRdata$display)
+weights &lt;- CTRdata$expos
+nclicks &lt;- CTRdata$clicks * weights
+y &lt;- unname(cbind(weights - nclicks, nclicks))
+set.seed(12345)
+CTR_lasso &lt;- cv.glmnet(Sparse.Data, y, family = &quot;binomial&quot;)</code></pre>
+<p>I’ll also fit two other fixed-effects models:</p>
+<ol style="list-style-type: decimal">
+<li>A Ridge regression, which is another form of parameter penalization</li>
+<li>A straight-up fixed-effect Binomial GLM</li>
+</ol>
+<pre class="r"><code>set.seed(12345)
+CTR_ridge &lt;- cv.glmnet(Sparse.Data, y, family = &quot;binomial&quot;, alpha = 0)
+CTR_glm &lt;- glm(y[ , 2:1] ~ display + id, data = CTRdata, family = &quot;binomial&quot;)</code></pre>
+<p>Note that the <span class="math inline">\(\lambda\)</span> regularization parameter for the Ridge and LASSO models were chosen by 10-fold cross-validation. Let’s first take a look at the effect estimate for each of these models:</p>
+<pre><code>##     LASSO     Ridge       GLM 
+## 0.1247575 0.1371491 0.5138967</code></pre>
+<p>I set the true display effect to 0.5, so right off the bat we’re seeing the effect of Ridge and LASSO regularization. Though Ridge and LASSO have their myriad uses, at least in this case we are not seeing an interpretable estimate of display effect. Since the GLM is a full model fit, we should not be surprised that its point estimate for <span class="math inline">\(\tau\)</span> is close to the truth.</p>
+<p>How do the predictive powers of these approaches compare? Let’s generate 50 “future” data sets from the same population of users. We’ll keep their initial (randomly generated) effects the same, since although the users were random draws from a larger population, their effects are physically constant characteristics.</p>
+<p>For each new data set, we’ll predict the logit means using the fitted model from the original data. To compare the prediction accuracies of the approaches, we’ll calculate the mean squared prediction error, which in this setting is defined as follows. Let <span class="math inline">\(\hat\mu_{ij}\)</span> be the model-predicted logit-mean for that user-display combination. Let <span class="math inline">\(\hat p_{ij} = \frac{\exp\{\hat\mu_{ij}\}}{1 + \exp\{\hat\mu_{ij}\}}\)</span>, which is the model-predicted probability of the <span class="math inline">\(j\)</span>-th user interacting with display version <span class="math inline">\(i\)</span>. Let <span class="math inline">\(y_{ijk}^\ast\)</span> be the <span class="math inline">\(k\)</span>-th new data point from the <span class="math inline">\(j\)</span>-th user seeing display version <span class="math inline">\(i\)</span>. Let <span class="math inline">\(n^\ast_{ij}\)</span> be the number of times the <span class="math inline">\(j\)</span>-th user saw display <span class="math inline">\(i\)</span>, and define <span class="math inline">\(N^\ast:=\sum_{ij}n^\ast_{ij}\)</span>. Then the mean squared prediction error is defined: <span class="math display">\[
+\text{MSPE} := \frac{1}{N^\ast}\sum_{ij}\sum_k(y^\ast_{ijk} - \hat p_{ij})^2
+\]</span> Note that, for the future data sets, it is possible for users to be assigned to Treatment when in the original data set they were Control, and vice-versa. This provides some desirable heterogenity in this comparative study. The following are the means and standard errors of the methods’ MSPEs:</p>
+<pre class="r"><code># MSPE means
+apply(MSEP_mat, 1, mean)</code></pre>
+<pre><code>##       GLMM      LASSO      Ridge        GLM 
+## 0.05563302 0.08391841 0.07302913 0.05565862</code></pre>
+<pre class="r"><code># MSPE standard errors
+apply(MSEP_mat, 1, sd)</code></pre>
+<pre><code>##         GLMM        LASSO        Ridge          GLM 
+## 0.0009425303 0.0012341418 0.0009497772 0.0009398414</code></pre>
+<p>At least for this number of users, the difference between methods appears vast. Let’s explore the MSPE for varying numbers of users. I ran the following experiment for a range of user sample sizes:</p>
+<ol style="list-style-type: decimal">
+<li>Sample the desired number of users from the population and generate data</li>
+<li>Fit the GLMM, GLM, LASSO, and Ridge models to the data</li>
+<li>Generate 50 new data sets from the same originally chosen users</li>
+<li>Calculate and store MSPE for each data set, for each method</li>
+</ol>
+<p>These were the results:</p>
+<pre><code>## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.
+
+## Warning in structure(NULL, class = &quot;waiver&quot;): Calling &#39;structure(NULL, *)&#39; is deprecated, as NULL cannot have attributes.
+##   Consider &#39;structure(list(), *)&#39; instead.</code></pre>
+<p><img src="/post/2016-09-15-glmms-with-cersei-lannister_files/figure-html/unnamed-chunk-22-1.png" width="1152" /></p>
+<p>Some conclusions can be drawn:</p>
+<ol style="list-style-type: decimal">
+<li><p>The LASSO and Ridge fits are decidedly worse than those of GLM and GLMM. This follows my intuition that the model parsimony provided by these methods may not be desirable in this setting. This result possibly reflects the same phenomenon at play in the Google blog post.</p></li>
+<li><p>The MSPEs of the GLM and GLMM fits are nearly identical. This should not be surprising, since the model matrix equations are essentially the same.</p></li>
+<li><p>While GLM and GLMM fits are identical, we seem to be gaining something computationally by fitting a mixed-effects model. This is probably only due to the particular <strong>R</strong> packages involved. Specifically, I think the fact that the GLM estimates come with standard errors is the main bottleneck. If we just cared about prediction, there is probably an equally fast GLM implementation. That being said, the choice to disregard user effects as parameters of interest provided the additional benefit of a faster off-the-shelf solution. I’m taking this as another win for the simplicity of the GLMM.</p></li>
+</ol>
+</div>
+</div>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<p>I began this post with a fun examination of dealing with multiple experimental units. This issue is a basic statistical concept that is nonetheless of extreme importance in many present-day applications. When we care to estimate the variance of the unit effect population, but not the effects themselves, we saw (with the help of Cersei Lannister) that mixed effects models are the appropriate choice.</p>
+<p>I briefly digressed to give my view that parameter randomness in mixed effects models has a different interpretation than parameter randomness in Bayesian models. In fact, you can take any combination of a (fixed-effect/mixed-effect, Bayesian/frequentist) approach to modeling parametric data.</p>
+<p>I closed with a section showing that, in a realistic simulation setting with large numbers of experimental units, a mixed-effect approach out-performed some industry-standard fixed-effect approaches with respect to prediction error on future data from the same simulation procedure. This is grounds to consider their usage in big data scenarios like those described in this post.</p>
+<div id="caveats" class="section level3">
+<h3>Caveats:</h3>
+<p>I’m no expert in the application of LASSO or Ridge regression approaches. There may be better rules-of-thumb or different regularization techniques that would make more sense for situations like my CTR simulation. If so, I look forward to hearing ideas in the comments.</p>
+<p>However, it remains true that for each of the four modeling approaches, I used the smartest “off-the-shelf” solution available in <strong>R</strong>, choosing (for instance) the <code>glmnet</code> default of 10-fold cross-validation to set the regularization parameters. It can therefore at least be said that the mixed-effects model outperforms at this level of work-put-in by a reasonably informed user.</p>
+</div>
+<div id="further-reading-and-references" class="section level3">
+<h3>Further reading and references:</h3>
+<ol style="list-style-type: decimal">
+<li><a href="http://glmm.wikidot.com/faq" class="uri">http://glmm.wikidot.com/faq</a></li>
+<li><a href="http://datascienceplus.com/introduction-to-bootstrap-with-applications-to-mixed-effect-models" class="uri">http://datascienceplus.com/introduction-to-bootstrap-with-applications-to-mixed-effect-models</a></li>
+<li><a href="http://www.ats.ucla.edu/stat/r/dae/melogit.htm" class="uri">http://www.ats.ucla.edu/stat/r/dae/melogit.htm</a></li>
+<li>Variance Components (Searle, Casella, and McCulloch, 1992)</li>
+<li>Generalized Linear Models, 2nd Edition (McCullagh and Nelder, 1989)</li>
+</ol>
+</div>
+<div id="code-examples" class="section level3">
+<h3>Code examples:</h3>
+<p>To make the CTR simulation data:</p>
+<pre class="r"><code>make_click_data &lt;- function (p, # Number of people to choose 
+                             mu, # Baseline logit-probability of click 
+                             tau, # Effect of new display
+                             sig_a, # Variance of random effects
+                             pois_mean, # Mean number of impressions
+                             effects = NULL) { # In case you actually want to fix effects
+  
+  if (is.null(effects))
+    effects &lt;- rnorm(p, 0, sig_a)
+  
+  # Preparing design
+  treat &lt;- rbinom(p, 1, 0.5)
+  treat_expos &lt;- rpois(p, pois_mean * 0.5) + 1
+  null_expos &lt;- rpois(p, pois_mean * (1 - 0.5)) + 1
+  id &lt;- 1:p
+  expos &lt;- treat_expos + null_expos
+  expos &lt;- c(expos[!treat == 1], null_expos[treat == 1], treat_expos[treat == 1])
+  id &lt;- c(id[!treat == 1], rep(id[treat == 1], 2))
+  treat &lt;- c(treat[!treat == 1], rep(0, sum(treat)), rep(1, sum(treat)))
+  means &lt;- mu + treat * tau + effects[id]
+  probs &lt;- exp(means) / (1 + exp(means))
+  
+  # Getting response and making data matrix
+  Y &lt;- rbinom(length(probs), expos, probs)
+  dataMat &lt;- data.frame(&quot;clicks&quot; = Y,
+                        &quot;expos&quot; = expos,
+                        &quot;display&quot; = treat,
+                        &quot;id&quot; = as.factor(id))
+  
+  return(list(&quot;Data&quot; = dataMat,
+              &quot;Effects&quot; = effects))
+  
+}
+
+# Make simulated data
+set.seed(1)
+CTR_Exp1 &lt;- make_click_data(p = 1e3,
+                            mu = -4.5,
+                            tau = 0.5,
+                            sig_a = 5,
+                            pois_mean = 20)</code></pre>
+<p>To calculate MSPE of the methods over many repetitions of the data from the original simulation model:</p>
+<pre class="r"><code>user_effects &lt;- CTR_Exp1$Effects
+nsims &lt;- 50
+MSEP_mat &lt;- matrix(0, 4, nsims)
+rownames(MSEP_mat) &lt;- c(&quot;GLMM&quot;, &quot;LASSO&quot;, &quot;Ridge&quot;, &quot;GLM&quot;)
+for (i in 1:nsims) {
+  
+  # Generating data
+  new_CTR &lt;- make_click_data(p = 1e3, 
+                             mu = -4.5,
+                             tau = 0.5,
+                             sig_a = 5,
+                             pois_mean = 20,
+                             effects = user_effects)
+  
+  # Prepping LASSO data
+  new_id.matrix &lt;- sparse.model.matrix(~ new_CTR$Data$id - 1)
+  new_Sparse.Data &lt;- cBind(new_id.matrix, new_CTR$Data$display)
+  
+  # Getting y data
+  new_weights &lt;- new_CTR$Data$expos
+  new_nclicks &lt;- new_CTR$Data$clicks
+  y_new &lt;- unname(cbind(new_weights - new_nclicks, new_nclicks))
+  
+  calc_MSEP &lt;- function (pred) {
+    err0 &lt;- pred^2 * y_new[ , 1]
+    err1 &lt;- (1 - pred)^2 * y_new[ , 2]
+    return((sum(err0) + sum(err1)) / sum(new_weights))
+  }
+  
+  # Calculating prediction logit means
+  lme_pred &lt;- predict(CTR_lme1, newdata = new_CTR$Data)
+  lasso_pred &lt;- predict(CTR_lasso, newx = new_Sparse.Data)
+  ridge_pred &lt;- predict(CTR_ridge, newx = new_Sparse.Data)
+  glm_pred &lt;- predict(CTR_glm, newdata = new_CTR$Data)
+  
+  # Calculating prediction probs
+  lme_pred_probs &lt;- exp(lme_pred) / (1 + exp(lme_pred))
+  lasso_pred_probs &lt;- exp(lasso_pred) / (1 + exp(lasso_pred))
+  ridge_pred_probs &lt;- exp(ridge_pred) / (1 + exp(ridge_pred))
+  glm_pred_probs &lt;- exp(glm_pred) / (1 + exp(glm_pred))
+  
+  # Calculating prediction probs
+  prob_mat &lt;- cbind(exp(lme_pred) / (1 + exp(lme_pred)),
+                    exp(lasso_pred) / (1 + exp(lasso_pred)),
+                    exp(ridge_pred) / (1 + exp(ridge_pred)),
+                    exp(glm_pred) / (1 + exp(glm_pred)))
+  
+  MSEP_mat[ , i] &lt;- unname(apply(prob_mat, 2, calc_MSEP))
+  
+}</code></pre>
+</div>
+</div>
