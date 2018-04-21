@@ -208,8 +208,14 @@ Y_{ijk} = \mu + \tau\mathbb{1}(i = 2) + \alpha_j + \epsilon_{ik}\;\;\;\;\;\;\;\;
 <p>Let’s fit the model to Jaime’s 2nd set of experimental data:</p>
 <pre class="r"><code>lme2 &lt;- lmer(Distance_ ~ Bow_ + (1 | Name_), data = JaimeExp2$Data)</code></pre>
 <p>The switch to mixed effects modeling shifts the focus from inference on the individual archer to inference on the population of archers. This focus is important in applications from many fields, like biology (where observations may come from many organisms), economics (where observations may come from many regions or agents), or clinical trials (where observations may come from many different labs). In our example, it makes sense for Cersei to want to learn about the variance in city-wide marksman skill along with the effect of Southbows. The estimate <span class="math inline">\(\hat\sigma^2_a\)</span> gives her this:</p>
-<pre class="r"><code>VarCorr(lme2)
-confint(lme2)[1:2, ]</code></pre>
+<pre class="r"><code>VarCorr(lme2)</code></pre>
+<pre><code>##  Groups   Name        Std.Dev.
+##  Name_    (Intercept) 22.9698 
+##  Residual              4.9875</code></pre>
+<pre class="r"><code>confint(lme2)[1:2, ]</code></pre>
+<pre><code>##            2.5 %    97.5 %
+## .sig01 18.907078 28.054556
+## .sigma  4.768896  5.217741</code></pre>
 <p>The output above gives the estimates for <span class="math inline">\(\sigma_a\)</span> and <span class="math inline">\(\sigma_e\)</span>, and the assocated confidence intervals. These parameters don’t exist in a fixed-effects model.</p>
 <div id="using-the-model-to-choose-archer" class="section level3">
 <h3>Using the model to choose archer</h3>
@@ -329,6 +335,10 @@ up_low &lt;- confint(CTR_lme1)
 full_mat &lt;- cbind(&quot;Estimate&quot; = c(fixef_hat, siga_hat), up_low[c(2:3, 1), ])
 rownames(full_mat) &lt;- c(&quot;Intercept&quot;, &quot;Tau&quot;, &quot;sig_a&quot;)
 print(exp(full_mat) * 100, digits = 4)</code></pre>
+<pre><code>##            Estimate     2.5 %    97.5 %
+## Intercept 6.782e-01     0.386     1.135
+## Tau       1.674e+02   142.472   196.918
+## sig_a     3.011e+04 17688.802 54082.326</code></pre>
 <p>The new display causes an estimated change in click odds of about 167%. Considering that <span class="math inline">\(\exp(0.5) \approx 1.65\)</span>, this is not too far from where I set the true effect. The interpretation of the <span class="math inline">\(\mu\)</span> estimate is that the baseline click odds are (with high confidence) less than 1% of those of getting heads on a fair coin flip. The <span class="math inline">\(\sigma_a\)</span> estimate means that user “clickiness” variance is about 100x larger than the display effect, on the log-odds scale. The large amount of data in this simulation means we can still detect the positive display effect.</p>
 <div id="accuracy-and-speed-of-the-mixed-effects-model" class="section level3">
 <h3>Accuracy and speed of the mixed effects model</h3>
@@ -347,8 +357,12 @@ CTR_lasso &lt;- cv.glmnet(Sparse.Data, y, family = &quot;binomial&quot;)</code><
 CTR_ridge &lt;- cv.glmnet(Sparse.Data, y, family = &quot;binomial&quot;, alpha = 0)
 CTR_glm &lt;- glm(y[ , 2:1] ~ display + id, data = CTRdata, family = &quot;binomial&quot;)</code></pre>
 <p>The <span class="math inline">\(\lambda\)</span> regularization parameter for the Ridge and LASSO models were chosen by 10-fold cross-validation, as is default for the <code>cv</code> function. Here are the effect estimates for each of these models:</p>
+<pre><code>##     LASSO     Ridge       GLM 
+## 0.1247575 0.1371491 0.5138967</code></pre>
 <p>The true display effect is 0.5, so the effect of Ridge and LASSO regularization is apparent. Though Ridge and LASSO have their uses, at least in this case they’re preventing an interpretable estimate of display effect. Since the logistic is a full model fit, we should not be surprised that its point estimate for <span class="math inline">\(\tau\)</span> is close to the truth.</p>
 <p>How do the predictive powers of these approaches compare? Let’s generate 50 “future” data sets from the same population of users. For each new data set, we’ll predict the logit means using the fitted model from the original data. To compare the prediction accuracies of the approaches, we’ll calculate the mean squared prediction error<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>. Note that, for the future data sets, it is possible for users to be assigned to Treatment when in the original data set they were Control, and vice-versa. This provides some nice heterogenity in this comparative study. The following are the means and standard errors of the methods’ MSPEs:</p>
+<pre><code>## Warning: &#39;cBind&#39; is deprecated.
+##  Since R version 3.2.0, base&#39;s cbind() should work fine with S4 objects</code></pre>
 <pre class="r"><code># MSPE means
 apply(MSEP_mat, 1, mean)
 # MSPE standard errors
@@ -361,6 +375,7 @@ apply(MSEP_mat, 1, sd)</code></pre>
 <li>Calculate and store MSPE for each data set, for each method</li>
 </ol>
 <p>These were the results:</p>
+<p><img src="/post/2016-09-15-glmms-with-cersei-lannister_files/figure-html/unnamed-chunk-20-1.png" width="1152" /></p>
 <p>Some conclusions:</p>
 <ol style="list-style-type: decimal">
 <li><p>The LASSO and Ridge models are worse than the GLM and GLMM models. Possibly, the model parsimony provided by the former methods is actually harmful in this setting. This result possibly reflects the same phenomenon at play in the Google blog post.</p></li>

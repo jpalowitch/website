@@ -623,7 +623,7 @@ For the fixed-effect models, there might be better rules-of-thumb or different r
 ### Code examples:
 
 To make the CTR simulation data:
-```{r, eval = TRUE, echo = TRUE}
+```{r, eval = FALSE, echo = TRUE}
 make_click_data <- function (p, # Number of people to choose 
                              mu, # Baseline logit-probability of click 
                              tau, # Effect of new display
@@ -668,7 +668,7 @@ CTR_Exp1 <- make_click_data(p = 1e3,
 ```
 
 To calculate MSPE of the methods over many repetitions of the data from the original simulation model:
-```{r, eval = TRUE, echo = TRUE}
+```{r, eval = FALSE, echo = TRUE}
 user_effects <- CTR_Exp1$Effects
 nsims <- 50
 MSEP_mat <- matrix(0, 4, nsims)
