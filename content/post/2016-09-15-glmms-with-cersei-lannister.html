@@ -9,7 +9,7 @@ tags: ["R", "GLMM"]
 
 
 
-<p><em>I wrote this a long time ago while preparing for job interviews. Though I’ve made some stylistic changes, it’s mostly as it was. Nothing in this post relates to my current or past projects at Google, nor were any Google data used or consulted. All methods and applications covered are commonplace, and are discussed widely and publicly.</em></p>
+<p><em>I wrote this a long time ago while preparing for job interviews. Though I’ve made some stylistic changes, the analysis is as it was when I first published it on a previous blog. In other words, nothing in this post relates to my current projects at Google, nor were any Google data used or consulted: it was written over a year before my start date. All methods and applications covered are commonplace, and are discussed widely and publicly.</em></p>
 <hr />
 <p>This post does the following:</p>
 <ol style="list-style-type: decimal">
@@ -17,13 +17,13 @@ tags: ["R", "GLMM"]
 <li>Discusses the interpretation of and motivation for mixed effects regression models</li>
 <li>Provides short, educational GOT fan-fic, with pictures</li>
 </ol>
-<p>Some of this post is in response to a <a href="http://www.unofficialgoogledatascience.com/2016/03/using-random-effects-models-in.html">great article</a> from folks at Google. They show a cool result about the predictive efficacy of a mixed-effects model, so I decided to try a related experiment. I found their interpretation of the model a little confusing, particularly in distinguishing it from a Bayesian approach. So I’ll be expanding on that as well.</p>
+<p>Some of this is in response to a <a href="http://www.unofficialgoogledatascience.com/2016/03/using-random-effects-models-in.html">great article</a> from folks at Google. They show a cool result about the predictive efficacy of a mixed-effects model, so I decided to try a related experiment. I found their interpretation of the model somewhat off, particularly in distinguishing it from a Bayesian approach. So I’ll be expanding on that as well.</p>
 <p>Some code is in-line, but not all of it. The code provided is associated with the <strong>R</strong> library chosen to fit the mixed models, called <code>lme4</code>, and is meant to display its basic functionality. The rest of the code is available upon request.</p>
 <p>Hat tip to <a href="http://fantasynamegenerators.com/got-westeros-names.php#.V8RQeSgrKUk">this neat tool</a> providing endless Westeros-style names to use for the first story. That story covers what it means to have different experimental units in a regression model. This is an important concept for understanding why we might want to use a mixed-model in the first place. Enter the Lannister family:</p>
 <div id="jaimes-archers" class="section level1">
 <h1>Jaime’s archers</h1>
 <p>Jaime was preparing for a long journey, on official Lannister business. Knowing that things would likely come to swords, he assembled a small force to accompany him. He had some time to take special care outfitting his troops, so he decided to run an experiment with two different kinds of bows.</p>
-<p>Normally, Lannister forces use bows made from Northwood, as common knowledge says they are stronger than Southwood bows. However, since Jaime is a Southerner, he prefers Southwood bows out of pride and convenience. He wanted to see if use of Southwood bows cause a statistically significant difference in archer range.</p>
+<p>Normally, Lannister forces used bows made from Northwood, as common knowledge said they are stronger than Southwood bows. However, since Jaime is a Southerner, he preferred Southwood bows out of pride and convenience. He wanted to see if use of Southwood bows cause a statistically significant difference in archer range.</p>
 <p>So, he chose three archers randomly from the kingdom’s forces, who each would shoot a Northwood bow and a Southwood bow 10 times. He bullied some local city-folk into measuring and recording the distance of the shots, in meters. Some of the resulting data is shown below:</p>
 <pre><code>##   Distance_      Bow_          Name_
 ## 1       163 Northwood Deonte Skinner
@@ -32,9 +32,9 @@ tags: ["R", "GLMM"]
 ## 4       149 Northwood Deonte Skinner
 ## 5       152 Northwood Deonte Skinner
 ## 6       155 Northwood Deonte Skinner</code></pre>
-<p>The other two archers were named Fabiar Darklyn and Margan Drumm. Jaime chose to fit the following linear regression model to his experiment’s data: <span class="math display">\[
+<p>The other two archers were named Fabiar Darklyn and Margan Drumm. Jaime fit the following linear regression model to his experiment’s data: <span class="math display">\[
 Y_{ik} = \mu + \tau\mathbb{1}(i = 2) + \epsilon_{ik}
-\]</span> Above, <span class="math inline">\(Y_{ik}\)</span> is the <span class="math inline">\(k\)</span>-th shot from bow <span class="math inline">\(i = 1,2\)</span>, and the Southwood bow is considered to be the second bow. The variables <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\tau\)</span> represent the mean shot distance and mean effect of the Southwood bow. The final term <span class="math inline">\(\epsilon_{ik}\)</span> is the random error (the Winds of Westeros, perhaps) contributing to the <span class="math inline">\(k\)</span>-th shot from the <span class="math inline">\(i\)</span>-th bow. There are <span class="math inline">\(3\times 10 = 30\)</span> shots per bow, since each marksman shoots each bow 10 times. The errors are independent shot-to-shot and Normally distributed with constant variance <span class="math inline">\(\sigma^2_e\)</span>. Here’s the summary of Jaime’s analysis:</p>
+\]</span> In that equation, <span class="math inline">\(Y_{ik}\)</span> is the <span class="math inline">\(k\)</span>-th shot from bow <span class="math inline">\(i = 1,2\)</span>, and the Southwood bow is considered to be the second bow. The variables <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\tau\)</span> represent the mean shot distance and mean effect of the Southwood bow. The final term <span class="math inline">\(\epsilon_{ik}\)</span> is the random error (the Winds of Westeros, perhaps) contributing to the <span class="math inline">\(k\)</span>-th shot from the <span class="math inline">\(i\)</span>-th bow. There are <span class="math inline">\(3\times 10 = 30\)</span> shots per bow, since each marksman shoots each bow 10 times. The errors are independent shot-to-shot and Normally distributed with constant variance <span class="math inline">\(\sigma^2_e\)</span>. Here’s the summary of Jaime’s analysis:</p>
 <pre class="r"><code>lm0 &lt;- lm(Distance_ ~ Bow_, data = JaimeExp1$Data)
 summary(lm0)</code></pre>
 <pre><code>## 
@@ -90,21 +90,21 @@ summary(lm1)</code></pre>
 ## Multiple R-squared:  0.9485, Adjusted R-squared:  0.9457 
 ## F-statistic: 343.6 on 3 and 56 DF,  p-value: &lt; 2.2e-16</code></pre>
 <p>After accounting for the different archer, the estimated effect of the Southwood bow became quite statistically significant. These results weren’t as pleasing to Jaime, who stormed past a smirking Tyrion. “Well? What read your results?” he heard as he slammed the training field gate behind him.</p>
-<p>So what happened? There are two separable sources of error around the bow effect: per-shot random error, and variance among archer shooting strengths. At Tyrion’s suggestion, Jaime controlled for this in the second model by including archer effects.</p>
+<p>So what happened? There were two separable sources of error around the bow effect: per-shot random error, and variance among archer shooting strengths. At Tyrion’s suggestion, Jaime controlled for this in the second model by including archer effects.</p>
 <div class="figure">
 <img src="tyrion.png" alt="I drink, and I account for variance in experimental units" />
 <p class="caption"><em>“I drink, and I account for variance in experimental units”</em></p>
 </div>
-<p>Here’s an illustration of why it’s important to include archer effects, or in general, “experimental unit” effects. Without knowledge of the particular archer, Jaime’s data look like:</p>
+<p>Here’s an illustration of why it’s important to include archer effects, or in general, “experimental unit” effects. Without knowledge of the particular archer, Jaime’s data look like this:</p>
 <p><img src="/post/2016-09-15-glmms-with-cersei-lannister_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
-<p>The red shots look somewhat above the blue shots, but the shot points seem to be somehow layered. Here’s the plot with points shaped differently for different archers:</p>
+<p>The red shots look somewhat above the blue shots, but the shot points seem to be layered. Here’s the plot with points shaped differently for different archers:</p>
 <p><img src="/post/2016-09-15-glmms-with-cersei-lannister_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <p>It’s now apparent that the red shots are usually higher than the green shots, and the shots cluster around distinct locations that depend on the marksman. Including marksman terms in the model allows for estimation of the noise variance around the <em>marksman</em> centers, rather than the overall center. This is beneficial from (at least) two standpoints:</p>
 <ol style="list-style-type: decimal">
-<li><strong>Interpretation</strong>: the variance due to archer skill is clearly not random error (Winds of Westeros), so a model that does not account for the marksman will give a highly innacurate estimate of the per-shot variance.</li>
+<li><strong>Interpretation</strong>: the variance due to archer skill is clearly not random error, so a model that does not account for the marksman will give an inaccurate estimate of the true per-shot variance.</li>
 <li><strong>Estimation of <span class="math inline">\(\tau\)</span></strong>: we are better able to “see” the effect of the Southwood bow when we separate the shots by marksman.</li>
 </ol>
-<p>After cooling down a little, Jaime realized that (despite not achieving the result he desired) his findings could be of use to the Lannister army. He decided to run a larger experiment with 50 archers to solidify the results. Here was the outcome:</p>
+<p>After cooling down a little, Jaime realized that, despite not achieving the result he wanted, his findings could be useful to the Lannister army. He decided to run a larger experiment with 50 archers to solidify the results. Here was the outcome:</p>
 <pre class="r"><code>lm2 &lt;- lm(Distance_ ~ Bow_ + Name_, data = JaimeExp2$Data)
 summary(lm2)</code></pre>
 <pre><code>## 
@@ -175,7 +175,7 @@ summary(lm2)</code></pre>
 ## Multiple R-squared:  0.9585, Adjusted R-squared:  0.9564 
 ## F-statistic: 438.8 on 50 and 949 DF,  p-value: &lt; 2.2e-16</code></pre>
 <p>Having disregarded much of his scientific education, Jaime felt quite overwhelmed with this massive list of parameter estimates. In particular, he was confused by the few archers without a statistically significant estimate. Should he re-run the experiment without them? (Note, the standard errors for the archer effect estimates are the same because they all fired the same number of shots.)</p>
-<p>This time, Cersei was hanging around the training grounds. Overhearing Jaime, she decided to step in. “Jaime, don’t trouble yourself with those worrisome parameter estimates for the archers. I looked at your charts from the first experiment. It is certainly proper to account for archers in the model, but the only value we care about is the <em>variance</em> of their skills.” Later that afternoon she developed Westeros’s first Linear Mixed Effects model, in which archer effects are considered to be random draws from a larger population.</p>
+<p>This time, Cersei was hanging around the training grounds. Overhearing Jaime, she decided to step in. “Jaime, don’t trouble yourself with those worrisome parameter estimates for the archers. I looked at your charts from the first experiment. It is certainly proper to account for archers in the model, but the only value we care about is the <em>variance</em> of their skills.” Later that afternoon she developed Westeros’s first Linear Mixed Effects model. In this model, archer effects are considered to be random draws from a larger population.</p>
 <div class="figure">
 <img src="cersei.jpg" alt="With these equations I shall secure the reputation of the Lannister name in both might and maths" />
 <p class="caption"><em>“With these equations I shall secure the reputation of the Lannister name in both might and maths”</em></p>
@@ -186,15 +186,15 @@ summary(lm2)</code></pre>
 <p>Cersei’s key observation is that Jaime chose 50 archers out of the large population of archers in and around King’s Landing. Furthermore, he did so in a random fashion, distributing the bow test across a representative population of archers. This randomness can be incorporated in the model by treating archer effects as Normal random variables with a common, fixed variance: <span class="math display">\[
 Y_{ijk} = \mu + \tau\mathbb{1}(i = 2) + \alpha_j + \epsilon_{ik}\;\;\;\;\;\;\;\;\;\;\;\;\;\;\alpha_j\sim\mathcal{N}(0, \sigma^2_a)
 \]</span> The <span class="math inline">\(\alpha_j\)</span>’s are now not of interest to estimate; they exist to separate out the contribution of marksman skill to per-shot variance. This “variance component”, <span class="math inline">\(\sigma^2_a\)</span>, is now the archer parameter of interest.</p>
-<p>Note that, though the <span class="math inline">\(\alpha_j\)</span>’s as modeled as random variables, they do not change shot-to-shot. From a physical perspective, they are still fixed features of the archer. We regard them as random only to focus on the underlying distribution of archer skill, and its effect on the predictive model.</p>
+<p>Note that, though the <span class="math inline">\(\alpha_j\)</span>’s as modeled as random variables, they do not change shot-to-shot. Mechanistically, they are still fixed features of the archer. We regard them as random only to focus on the underlying distribution of archer skill, and its effect on the predictive model.</p>
 <div id="random-effects-vs.bayesian-randomness" class="section level3">
 <h3>Random-effects vs. Bayesian randomness</h3>
-<p><strong>Wait, if the parameters are random, isn’t this a Bayesian model?</strong> This is a reasonable question. In my view, the parameters in a mixed model get their randomness from the unit (marksman) <em>sampling</em> process, so they are <em>objectively</em> random, because there is a real population of parameters being sampled from. In a Bayesian model, however, parameters are <em>subjectively</em> random in the sense that their prior and posterior distributions are meant to quantify our <em>personal uncertainty</em> about their values.</p>
+<p><strong>Wait, if the parameters are random, isn’t this a Bayesian model?</strong> A reasonable question. In my view, the parameters in a mixed model get their randomness from the unit (marksman) <em>sampling</em> process, so they have <em>objective</em> randomness, because there is a real population of parameters being sampled from. In a Bayesian model, however, parameters have <em>subjective</em> randomness in the sense that their prior and posterior distributions are meant to quantify our <em>personal uncertainty</em> about their values.</p>
 <p>These are distinct conceptions of randomness. In fact, it is possible to model the random effects in a mixed-effects model as, additionally, subjectively random with respect to their values (called <a href="https://www2.stat.duke.edu/courses/Fall08/sta290/Lectures/randomeffects/randomeffects.pdf">Bayesian Linear Mixed Models</a>). So, we can fit either a fixed-effects <em>or</em> a mixed-effects model, each with a fully Bayesian approach, or not. The choice to employ a mixed-effects model in the first place still exists in the Bayesian framework, and depends on all the same aspects of our modeling goals.</p>
 <p>Look back at the full fixed-effects model we considered for the bow experiments. In the most straightforward Bayesian framework, we would specify a conjugate set of of priors distributions: Normal for <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\tau\)</span>, and the <span class="math inline">\(\alpha_j\)</span>’s, and Inverse Gamma for <span class="math inline">\(\sigma^2_e\)</span>.</p>
-<p>For the full mixed-effects model, however, it sort of looks like we already have a prior on the <span class="math inline">\(\alpha\)</span>’s. I would argue that this is an abuse of the term “prior”. The Normal distribution on the <span class="math inline">\(\alpha\)</span>’s still represents the <em>sampling</em> uncertainty in the model. In our Gibbs sampler, it is used to update the <span class="math inline">\(\alpha\)</span>’s, but if we store the <span class="math inline">\(\alpha\)</span>’s what we end up with should not be interpreted as a posterior distribution of a fixed parameter.</p>
-<p>This is not just a semantic difference: in the Bayesian approach to our mixed-effects model, we would need a prior on <span class="math inline">\(\sigma^2_a\)</span>, since that is the archer parameter of interest. In the Bayesian fixed-effects model, we gave the <span class="math inline">\(\alpha\)</span>’s Normal priors directly, and <span class="math inline">\(\sigma^2_a\)</span> was a fixed hyperparameter.</p>
-<p>But the semantic distinctions are important too. It would be inappropriate, for instance, to talk about Bayes Factors or credible intervals associated with the <span class="math inline">\(\alpha\)</span>’s, since from a modeling perspective we have decided not to treat them as values to estimate or do inference upon.</p>
+<p>For the full mixed-effects model, however, it sort of looks like we already have a prior on the <span class="math inline">\(\alpha\text{&#39;s}\)</span>. I would argue that this is an abuse of the term “prior”. The Normal distribution on the <span class="math inline">\(\alpha\text{&#39;s}\)</span> still represents the <em>sampling</em> uncertainty in the model. In our Gibbs sampler, it is used to update the <span class="math inline">\(\alpha\text{&#39;s}\)</span>, but if we store the <span class="math inline">\(\alpha\text{&#39;s}\)</span> what we end up with should not be interpreted as a posterior distribution of a fixed parameter.</p>
+<p>This is not just a semantic difference: in the Bayesian approach to our mixed-effects model, we would need a prior on <span class="math inline">\(\sigma^2_a\)</span>, since that is the archer parameter of interest. In the Bayesian fixed-effects model, we gave the <span class="math inline">\(\alpha\text{&#39;s}\)</span> Normal priors directly, and <span class="math inline">\(\sigma^2_a\)</span> was a fixed hyperparameter.</p>
+<p>But the semantic distinctions are important too. It would be inappropriate, for instance, to talk about Bayes Factors or credible intervals associated with the <span class="math inline">\(\alpha\text{&#39;s}\)</span>, since from a modeling perspective we have decided not to treat them as values to estimate or do inference on.</p>
 </div>
 <div id="when-not-to-use-a-mixed-effects-model" class="section level3">
 <h3>When not to use a mixed-effects model</h3>
@@ -220,27 +220,26 @@ Y_{ijk} = \mu + \tau\mathbb{1}(i = 2) + \alpha_j + \epsilon_{ik}\;\;\;\;\;\;\;\;
 <div id="using-the-model-to-choose-archer" class="section level3">
 <h3>Using the model to choose archer</h3>
 <p>“But wait,” Jaime might protest, “what if I care about the particular archer I happened to put to task? Now we know that Northwood bows are the obvious choice, how does our model help me choose which men to take on my journey? Cersei’s model isn’t specific enough. At least with the fixed effects model I had parameter estimates!”</p>
-<p>Actually, a mixed effects model can rank the units (archers) in a functionally identical way. Once the model is fit, we can calculate the <em>conditional expectation</em> of a particular archer’s effect, given their experimental data. This can operate as a skill score for the archer: <span class="math display">\[
+<p>Actually, a mixed effects model can rank the units (archers) in an analogous way. Once the model is fit, we can calculate the <em>conditional expectation</em> of a particular archer’s effect, given their experimental data. This can operate as a skill score for the archer: <span class="math display">\[
 \text{Score for archer }j = \mathbb{E}\left[\alpha_j | \bar y_{j\cdot}\right]
-\]</span> Above, <span class="math inline">\(\bar y_{j\cdot}\)</span> is the <span class="math inline">\(j\)</span>-th archer’s average shot distance. Remember, in our model, each <span class="math inline">\(\alpha_j\)</span> is random, with mean zero. So taking expectations shouldn’t seem useful, at first. However, knowledge of our experimental data biases our expectation of <span class="math inline">\(\alpha_j\)</span>, depending on where the data fall relative to the overall mean. The above quantity is often taken as a “predictor” of <span class="math inline">\(\alpha_j\)</span>, and archers with higher <span class="math inline">\(\bar y_{j\cdot}\)</span>’s have higher predictions.</p>
+\]</span> Above, <span class="math inline">\(\bar y_{j\cdot}\)</span> is the <span class="math inline">\(j\)</span>-th archer’s average shot distance. Remember, in the model, each <span class="math inline">\(\alpha_j\)</span> is random, with mean zero. So taking expectations shouldn’t seem useful, at first. However, knowledge of the experimental data biases the expectation of <span class="math inline">\(\alpha_j\)</span>, depending on where the data fall relative to the overall mean. The above quantity is often taken as a “predictor” of <span class="math inline">\(\alpha_j\)</span>, and archers with higher <span class="math inline">\(\bar y_{j\cdot}\)</span>’s have higher predictions.</p>
 <p>As it turns out, these predictions are exactly proportional to archer-wise parameter estimates from the fixed-effects model. So Jaime isn’t losing anything! Also, since he’s planning for a journey, the “prediction” interpretation is nice.</p>
-<p>Another benefit of the mixed model is that the intercept parameter <span class="math inline">\(\mu\)</span> is interpretable as the mean of the effects <em>population</em> using the Northwood bow (and <span class="math inline">\(\mu + \tau\)</span> for the Southwood bow). Therefore, the estimate for <span class="math inline">\(\mu\)</span> also speaks to the broad population of archers. This is not the case for the fixed-effects model. In that model, <span class="math inline">\(\mu\)</span> is just an intercept. Usually, it doesn’t even correspond to the true response mean of the experimental units (although it can be forced to with some parameter contstraints).</p>
-<p>All these characteristics of mixed-effects models are part of Bayesian approach, as well. We can compute MCMC posterior conditional means for the <span class="math inline">\(\alpha\)</span>’s, and examine the posterior distributions for <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\tau\)</span>, and the variance components. The choice between mixed-effects and fixed-effects modeling has little to do with the choice between a frequentist and Bayesian approach to parameter estimation.</p>
+<p>These characteristics of mixed-effects models are part of Bayesian approach, as well. We can compute posterior conditional means for the <span class="math inline">\(\alpha\text{&#39;s}\)</span>, and examine the posterior distributions for <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\tau\)</span>, and the variance components. The choice between mixed-effects and fixed-effects modeling has little to do with the choice between a frequentist and Bayesian approach to parameter estimation.</p>
 </div>
 <div id="what-about-tau" class="section level3">
 <h3>What about <span class="math inline">\(\tau\)</span>?</h3>
 <p>At least for vanilla linear models, parameter and standard error estimates for fixed effects in the mixed model are the same as what they would be in the full fixed-effects model fit. However, for massive data sets with lots of parameters, it’s standard practice nowadays to use a penalized likelihood, like LASSO or RIDGE. As such, the authors of the Google blog post compared mixed-effects models and <em>penalized</em> linear models, and found that the mixed-effects model had slightly higher predictive power.</p>
-<p>One explanation for this could be that shrinking experimental unit effect estimates isn’t optimal for predictive purposes. For example, though many archer parameters in Jaime’s fixed-effects model weren’t significant, it was still useful to account for their un-penalized values (see the exploratory plots with just three archers). The mixed-effect fit does this by implicitly retaining the archer-wise predicted parameters, but a LASSO-penalized fixed-effect fit won’t.</p>
+<p>One explanation for this could be that shrinking experimental unit effect estimates isn’t optimal for predictive purposes. For example, though many archer parameters in Jaime’s fixed-effects model weren’t significant, it was still useful to account for their un-penalized values (see the exploratory plots with just three archers). The mixed-effect model does this by implicitly retaining the archer-wise predicted parameters, but a LASSO-penalized fixed-effect model won’t.</p>
 <p>Let’s see how all this plays out with a much larger data set.</p>
 </div>
 </div>
 </div>
-<div id="a-large-scale-example" class="section level1">
-<h1>A large-scale example</h1>
-<p>Suppose you work for a company that provides online services with accompanying ads. Your team is trying to decide between two versions of a general ad display module for a webpage. The metric for display effectiveness is the proportion of times a user interacts with (“clicks-through”) the ad out of the number of times they sees it (“impressions”). Higher click-through rate (CTR) is good because it means companies who pay for ad placement will pay more.</p>
+<div id="a-larger-scale-example" class="section level1">
+<h1>A larger-scale example</h1>
+<p>Suppose you work for a company that provides online services with accompanying ads. Your team is trying to decide between two versions of a general ad display module for a webpage. The metric for display effectiveness is the proportion of times a user interacts with (“clicks-through”) the ad out of the number of times they see it (“impressions”). Higher click-through rate (CTR) is good because it means companies who pay for ad placement will pay more.</p>
 <p>An appropriate model for this situation is a logistic regression. In this model, each user <span class="math inline">\(j\)</span> encounters the <span class="math inline">\(i\)</span>-th version of the display <span class="math inline">\(n_{ij}\)</span> times, and has some probability <span class="math inline">\(p_{ij}\)</span> of clicking on some part of it each time. This <span class="math inline">\(p_{ij}\)</span> will depend on which version of the display user <span class="math inline">\(j\)</span> is currently in front of. The parameter <span class="math inline">\(\tau\)</span> will represent the fixed effect of the new display version, analogous to the Southwood bow. The <span class="math inline">\(\alpha_j\)</span>’s will be each user’s “clickiness” effect, and is analogous to archer skill.</p>
 <p>In this example, let’s add another simulation component generating the total number of impressions <span class="math inline">\(n_{ij}\)</span> at random from a Poisson distribution with <span class="math inline">\(\lambda = 20\)</span>. Also, we need a coin flip variable which chooses the “treatment” users. Finally, I diverted a (randomly chosen) latter portion of the treatment users’ impressions to the second display.</p>
-<p>If we assume we already know the impression counts <span class="math inline">\(n_{ij}\)</span>’s, the simulation model is: <span class="math display">\[
+<p>If we assume we already know each impression count <span class="math inline">\(n_{ij}\)</span>, the simulation model is: <span class="math display">\[
 Y_{ij}\sim\text{Binomial}(p_{ij}, n_{ij}),\;\;\;\;\;\;\log\left(\frac{p_{ij}}{1 - p_{ij}}\right) = \mu + \tau\mathbb{1}(i = 2) + \alpha_j,\;\;\;\;\;\;\alpha_j\sim\text{Normal}(0, \sigma^2)
 \]</span></p>
 <p>I generated data from 1,000 users with the following parameters:</p>
@@ -340,19 +339,15 @@ print(exp(full_mat) * 100, digits = 4)</code></pre>
 ## Intercept 6.782e-01     0.386     1.135
 ## Tau       1.674e+02   142.472   196.918
 ## sig_a     3.011e+04 17688.802 54082.326</code></pre>
-<p>The new display causes an estimated change in click odds of about 167%. Considering that <span class="math inline">\(\exp(0.5) \approx 1.65\)</span>, this is not too far from where I set the true effect. The interpretation of the <span class="math inline">\(\mu\)</span> estimate is that the baseline click odds are (with high confidence) less than 1% of those of getting heads on a fair coin flip. The <span class="math inline">\(\sigma_a\)</span> estimate means that user “clickability” variance is about 100x larger than the display effect, on the log-odds scale. The large amount of data in this simulation means we can still detect the positive display effect.</p>
+<p>The new display causes an estimated change in click odds of about 167%. Considering that <span class="math inline">\(\exp(0.5) \approx 1.65\)</span>, this is not too far from where I set the true effect. The interpretation of the <span class="math inline">\(\mu\)</span> estimate is that the baseline click odds are (with high confidence) less than 1% of those of getting heads on a fair coin flip. The <span class="math inline">\(\sigma_a\)</span> estimate means that user “clickiness” variance is about 100x larger than the display effect, on the log-odds scale. The large amount of data in this simulation means we can still detect the positive display effect.</p>
 <div id="accuracy-and-speed-of-the-mixed-effects-model" class="section level3">
 <h3>Accuracy and speed of the mixed effects model</h3>
 <p>This last section compares the performance of the Binomial GLMM to that of standard fixed-effects models, with respect to both predictive potential and compuation time.</p>
-<p>As mentioned just before the CTR example, a common addition to large-scale fixed-effect regression modeling is a LASSO penalty. Loosely speaking, the LASSO penalty zeros out user coefficients for users with effects not significantly different from the mean user effect. Fitting a LASSO is a little tricky in <strong>R</strong> if you have multi-level factor variables, especially if one of the variables has many, many levels (like our “user” variable). In case you’re interested in the best way to do this, I’ll print this chunk of code:</p>
-<pre class="r"><code>library(glmnet)</code></pre>
-<pre><code>## Loading required package: foreach</code></pre>
-<pre><code>## Loaded glmnet 2.0-16</code></pre>
-<pre class="r"><code>id.matrix &lt;- sparse.model.matrix(~ CTRdata$id - 1)
-Sparse.Data &lt;- cBind(id.matrix, CTRdata$display)</code></pre>
-<pre><code>## Warning: &#39;cBind&#39; is deprecated.
-##  Since R version 3.2.0, base&#39;s cbind() should work fine with S4 objects</code></pre>
-<pre class="r"><code>weights &lt;- CTRdata$expos
+<p>As mentioned just before the CTR example, a common addition to large-scale fixed-effect regression modeling is a LASSO penalty. Roughly, the LASSO penalty zeros out user coefficients for users with effects not significantly different from the mean user effect. Fitting a LASSO is a little tricky in <strong>R</strong> if you have multi-level factor variables, especially if one of the variables has many, many levels (like our “user” variable). In case you’re interested in the best way to do this, I’ll print this chunk of code:</p>
+<pre class="r"><code>suppressPackageStartupMessages(library(glmnet))
+id.matrix &lt;- sparse.model.matrix(~ CTRdata$id - 1)
+Sparse.Data &lt;- cbind(id.matrix, CTRdata$display)
+weights &lt;- CTRdata$expos
 nclicks &lt;- CTRdata$clicks * weights
 y &lt;- unname(cbind(weights - nclicks, nclicks))
 set.seed(12345)
@@ -365,7 +360,9 @@ CTR_glm &lt;- glm(y[ , 2:1] ~ display + id, data = CTRdata, family = &quot;binom
 <pre><code>##     LASSO     Ridge       GLM 
 ## 0.1247575 0.1371491 0.5138967</code></pre>
 <p>The true display effect is 0.5, so the effect of Ridge and LASSO regularization is apparent. Though Ridge and LASSO have their uses, at least in this case they’re preventing an interpretable estimate of display effect. Since the logistic is a full model fit, we should not be surprised that its point estimate for <span class="math inline">\(\tau\)</span> is close to the truth.</p>
-<p>How do the predictive powers of these approaches compare? Let’s generate 50 “future” data sets from the same population of users. For each new data set, we’ll predict the logit means using the fitted model from the original data. To compare the prediction accuracies of the approaches, we’ll calculate the mean squared prediction error[^1]. Note that, for the future data sets, it is possible for users to be assigned to Treatment when in the original data set they were Control, and vice-versa. This provides some desirable heterogenity in this comparative study. The following are the means and standard errors of the methods’ MSPEs:</p>
+<p>How do the predictive powers of these approaches compare? Let’s generate 50 “future” data sets from the same population of users. For each new data set, we’ll predict the logit means using the fitted model from the original data. To compare the prediction accuracies of the approaches, we’ll calculate the mean squared prediction error<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>. Note that, for the future data sets, it is possible for users to be assigned to Treatment when in the original data set they were Control, and vice-versa. This provides some nice heterogenity in this comparative study. The following are the means and standard errors of the methods’ MSPEs:</p>
+<pre><code>## Warning: &#39;cBind&#39; is deprecated.
+##  Since R version 3.2.0, base&#39;s cbind() should work fine with S4 objects</code></pre>
 <pre class="r"><code># MSPE means
 apply(MSEP_mat, 1, mean)</code></pre>
 <pre><code>##       GLMM      LASSO      Ridge        GLM 
@@ -385,7 +382,7 @@ apply(MSEP_mat, 1, sd)</code></pre>
 <p><img src="/post/2016-09-15-glmms-with-cersei-lannister_files/figure-html/unnamed-chunk-20-1.png" width="1152" /></p>
 <p>Some conclusions:</p>
 <ol style="list-style-type: decimal">
-<li><p>The LASSO and Ridge fits are worse than those of GLM and GLMM. Possibly, the model parsimony provided by these methods is actually harmful in this setting. This result possibly reflects the same phenomenon at play in the Google blog post.</p></li>
+<li><p>The LASSO and Ridge models are worse than the GLM and GLMM models. Possibly, the model parsimony provided by the former methods is actually harmful in this setting. This result possibly reflects the same phenomenon at play in the Google blog post.</p></li>
 <li><p>The MSPEs of the GLM and GLMM fits are nearly identical. This should not be surprising, since the model matrix equations are essentially the same.</p></li>
 <li><p>While GLM and GLMM fits are identical, we seem to be gaining something computationally by fitting a mixed-effects model. This is probably only due to the particular <strong>R</strong> packages involved. Specifically, I think the fact that the GLM estimates come with standard errors is the main bottleneck. If we just cared about prediction, there is probably an equally fast GLM implementation. That being said, the choice to disregard user effects as parameters of interest provided the additional benefit of a faster off-the-shelf solution.</p></li>
 </ol>
@@ -393,9 +390,9 @@ apply(MSEP_mat, 1, sd)</code></pre>
 </div>
 <div id="summary" class="section level1">
 <h1>Summary</h1>
-<p>This post began with a toy look into dealing with multiple experimental units. This issue is a basic statistical concept that is nonetheless of extreme importance in many present-day applications. When we care to estimate the variance of the unit effect population, but not the effects themselves, we saw (with Cersei’s help) that mixed effects models are the appropriate choice.</p>
+<p>In the first example, the Lannister family helped demonstrate dealing with multiple experimental units. This is a classical statistical concept that is still extremely relevant in many present-day applications. When we care to estimate the variance of the unit effect population, but not the effects themselves, mixed effects models are a great choice.</p>
 <p>Parameter randomness in mixed effects models has a different interpretation than parameter randomness in Bayesian models. In fact, you can take any combination of a (fixed-effect/mixed-effect, Bayesian/frequentist) approach to modeling parametric data.</p>
-<p>In a realistic simulation setting with large numbers of experimental units, a mixed-effect approach out-performed some industry-standard fixed-effect approaches with respect to prediction error on future data from the same simulation procedure. This is grounds to consider their usage in big data scenarios like those described in this post.</p>
+<p>In a realistic simulation setting with large numbers of experimental units, a mixed-effect approach out-performed some industry-standard fixed-effect approaches with respect to prediction error on future data from the same simulation procedure. Cool!</p>
 <div id="caveats" class="section level3">
 <h3>Caveats:</h3>
 <p>For the fixed-effect models, there might be better rules-of-thumb or different regularization techniques that would make more sense for situations like the CTR example. Maybe these would improve their performance, but I’m not sure. The results shown are from the most straightforward off-the-shelf implementations for some of the most common regularization approaches.</p>
@@ -510,4 +507,10 @@ for (i in 1:nsims) {
 \text{MSPE} := \frac{1}{N^\ast}\sum_{ij}\sum_k(y^\ast_{ijk} - \hat p_{ij})^2
 \]</span></p>
 </div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>1<a href="#fnref1">↩</a></p></li>
+</ol>
 </div>
