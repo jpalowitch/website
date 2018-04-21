@@ -103,7 +103,7 @@ summary(lm0)
 
 When the archers switched to a Southwood bow, their shot distances decreased by about 10 meters, on average. However, Jaime realized his p-value was not below that magical 0.05 threshold! He strutted merrily out of the experiment grounds, confident that his results must be due to unfair winds. (Clearly, Jaime missed some important Statistical Lectures of the Crown.)
 
-![*"A Lannister always pays attention to statistical differences in bow types"*](jaime.jpg)
+![*"A Lannister always pays attention to statistical differences in bow types"*](/img/jaime.jpg)
 
 ## Adding archer terms
 
@@ -125,7 +125,7 @@ After accounting for the different archer, the estimated effect of the Southwood
 
 So what happened? There were two separable sources of error around the bow effect: per-shot random error, and variance among archer shooting strengths. At Tyrion's suggestion, Jaime controlled for this in the second model by including archer effects.
 
-![*"I drink, and I account for variance in experimental units"*](tyrion.png)
+![*"I drink, and I account for variance in experimental units"*](/img/tyrion.png)
 
 Here's an illustration of why it's important to include archer effects, or in general, "experimental unit" effects. Without knowledge of the particular archer, Jaime's data look like this:
 
@@ -165,7 +165,7 @@ Having disregarded much of his scientific education, Jaime felt quite overwhelme
 
 This time, Cersei was hanging around the training grounds. Overhearing Jaime, she decided to step in. "Jaime, don't trouble yourself with those worrisome parameter estimates for the archers. I looked at your charts from the first experiment. It is certainly proper to account for archers in the model, but the only value we care about is the *variance* of their skills." Later that afternoon she developed Westeros's first Linear Mixed Effects model. In this model, archer effects are considered to be random draws from a larger population.
 
-![*"With these equations I shall secure the reputation of the Lannister name in both might and maths"*](cersei.jpg)
+![*"With these equations I shall secure the reputation of the Lannister name in both might and maths"*](/img/cersei.jpg)
 
 ## The mixed-effects model and sources of randomness
 
@@ -208,7 +208,7 @@ lme2 <- lmer(Distance_ ~ Bow_ + (1 | Name_), data = JaimeExp2$Data)
 
 The switch to mixed effects modeling shifts the focus from inference on the individual archer to inference on the population of archers. This focus is important in applications from many fields, like biology (where observations may come from many organisms), economics (where observations may come from many regions or agents), or clinical trials (where observations may come from many different labs). In our example, it makes sense for Cersei to want to learn about the variance in city-wide marksman skill along with the effect of Southbows. The estimate $\hat\sigma^2_a$ gives her this:
 
-```{r, message = FALSE}
+```{r, message = FALSE, eval = TRUE}
 VarCorr(lme2)
 confint(lme2)[1:2, ]
 ```
@@ -392,7 +392,7 @@ print(effect_estimates)
 
 The true display effect is 0.5, so the effect of Ridge and LASSO regularization is apparent. Though Ridge and LASSO have their uses, at least in this case they're preventing an interpretable estimate of display effect. Since the logistic is a full model fit, we should not be surprised that its point estimate for $\tau$ is close to the truth.
 
-How do the predictive powers of these approaches compare? Let's generate 50 "future" data sets from the same population of users. For each new data set, we'll predict the logit means using the fitted model from the original data. To compare the prediction accuracies of the approaches, we'll calculate the mean squared prediction error^[1]. Note that, for the future data sets, it is possible for users to be assigned to Treatment when in the original data set they were Control, and vice-versa. This provides some nice heterogenity in this comparative study. The following are the means and standard errors of the methods' MSPEs:
+How do the predictive powers of these approaches compare? Let's generate 50 "future" data sets from the same population of users. For each new data set, we'll predict the logit means using the fitted model from the original data. To compare the prediction accuracies of the approaches, we'll calculate the mean squared prediction error[^1]. Note that, for the future data sets, it is possible for users to be assigned to Treatment when in the original data set they were Control, and vice-versa. This provides some nice heterogenity in this comparative study. The following are the means and standard errors of the methods' MSPEs:
 ```{r, eval = TRUE, echo = FALSE, message = FALSE}
 user_effects <- CTR_Exp1$Effects
 nsims <- 50
@@ -445,7 +445,7 @@ for (i in 1:nsims) {
   
 }
 ```
-```{r}
+```{r, eval=FALSE}
 # MSPE means
 apply(MSEP_mat, 1, mean)
 # MSPE standard errors
@@ -623,7 +623,7 @@ For the fixed-effect models, there might be better rules-of-thumb or different r
 ### Code examples:
 
 To make the CTR simulation data:
-```{r, eval = FALSE, echo = TRUE}
+```{r, eval = TRUE, echo = TRUE}
 make_click_data <- function (p, # Number of people to choose 
                              mu, # Baseline logit-probability of click 
                              tau, # Effect of new display
@@ -668,7 +668,7 @@ CTR_Exp1 <- make_click_data(p = 1e3,
 ```
 
 To calculate MSPE of the methods over many repetitions of the data from the original simulation model:
-```{r, eval = FALSE, echo = TRUE}
+```{r, eval = TRUE, echo = TRUE}
 user_effects <- CTR_Exp1$Effects
 nsims <- 50
 MSEP_mat <- matrix(0, 4, nsims)
@@ -721,9 +721,8 @@ for (i in 1:nsims) {
 }
 ```
 
-[^1] The MSPE in this setting is defined as follows: Let $\hat\mu_{ij}$ be the model-predicted logit-mean for that user-display combination. Let $\hat p_{ij} = \frac{\exp\{\hat\mu_{ij}\}}{1 + \exp\{\hat\mu_{ij}\}}$, which is the model-predicted probability of the $j$-th user interacting with display version $i$. Let $y_{ijk}^\ast$ be the $k$-th new data point from the $j$-th user seeing display version $i$. Let $n^\ast_{ij}$ be the number of times the $j$-th user saw display $i$, and define $N^\ast:=\sum_{ij}n^\ast_{ij}$. Then:
-\[
-\text{MSPE} := \frac{1}{N^\ast}\sum_{ij}\sum_k(y^\ast_{ijk} - \hat p_{ij})^2
-\]
-
+[^1]: The MSPE in this setting is defined as follows: Let $\hat\mu_{ij}$ be the model-predicted logit-mean for that user-display combination. Let $\hat p_{ij} = \frac{\exp\{\hat\mu_{ij}\}}{1 + \exp\{\hat\mu_{ij}\}}$, which is the model-predicted probability of the $j$-th user interacting with display version $i$. Let $y_{ijk}^\ast$ be the $k$-th new data point from the $j$-th user seeing display version $i$. Let $n^\ast_{ij}$ be the number of times the $j$-th user saw display $i$, and define $N^\ast:=\sum_{ij}n^\ast_{ij}$. Then:
+    \[
+    \text{MSPE} := \frac{1}{N^\ast}\sum_{ij}\sum_k(y^\ast_{ijk} - \hat p_{ij})^2
+    \]
 

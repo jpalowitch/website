@@ -13,6 +13,9 @@ I’m a Data Scientist at [Google](http://hooli.com/). In 2017 I received my Ph.
 * __Palowitch, John__; Bhamidi, Shankar; Nobel, Andrew B. “*Significance-based community detection in weighted networks*.” [arXiv](https://arxiv.org/abs/1601.05630) [to appear in Journal of Machine Learning Research]
 * Wilson, James D.; __Palowitch, John__; Bhamidi, Shankar; Nobel, Andrew B. “*Significance Based Extraction in Multilayer Networks with Heterogeneous Community Structure*.” [arXiv](https://arxiv.org/abs/1610.06511) [to appear in Journal of Machine Learning Research]
 
+### Upcoming Conference Presentations
+* [SIAM NS18](https://www.siam.org/meetings/ns18/), July 12-13 2018
+
 ### Recent Conference Presentations
 
 * [Data Institute SF Annual Conference](http://www.sfdatainstitute.org/conference.html), October 16-17 2017
