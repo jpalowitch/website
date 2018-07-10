@@ -8,6 +8,7 @@ I’m a Data Scientist at [Google](http://hooli.com/). In 2017 I received my Ph.
 
 ### Publications
 
+* __Palowitch, John__; "*Computing the statistical significance of optimized communities in networks.*" [arxiv/1807.02930](https://arxiv.org/abs/1807.02930)
 * __Palowitch, John__; Bhamidi, Shankar; Nobel, Andrew B. “*Significance-based community detection in weighted networks*.” [Journal of Machine Learning Research, 18(188), 2018](http://www.jmlr.org/papers/v18/17-377.html)
 * __Palowitch, John__; Zhou, Yihui; Shabalin, Andrey; Zhou, Yihui; Nobel, Andrew B.; Wright, Fred A. “*Estimation of Interpretable eQTL Effect Sizes Using a Log of Linear Model*.” [Biometrics, 74(2), 2017](https://onlinelibrary.wiley.com/doi/abs/10.1111/biom.12810)
 * Wilson, James D.; __Palowitch, John__; Bhamidi, Shankar; Nobel, Andrew B. “*Significance Based Extraction in Multilayer Networks with Heterogeneous Community Structure*.” [Journal of Machine Learning Research, 18(149), 2017](http://www.jmlr.org/papers/v18/16-645.html)
