@@ -1,6 +1,6 @@
 baseurl = "/"
 languageCode = "en-us"
-title = "John Palowitch Stats/ML"
+title = "John Palowitch / Research Portfolio"
 theme = "hugo-ivy"
 googleAnalytics = ""
 disqusShortname = ""
@@ -41,7 +41,7 @@ footnotereturnlinkcontents = "↩"
      weight = 4
 
 [params]
-    description = "papers/links/code/posts."
+    description = "machine.learning x statistical.learning"
     footer = "&copy; [John Palowitch](https://stats.johnpalowitch.com) 2018 | [Github](https://github.com/jpalowitch) | [Twitter](https://twitter.com/JohnPalowitch) | Created with [blogdown](https://bookdown.org/yihui/blogdown):[ivy](https://github.com/yihui/hugo-ivy)"
 
   highlightjsVersion = "9.12.0"
