@@ -42,7 +42,7 @@ footnotereturnlinkcontents = "↩"
 
 [params]
     description = "machine.learning x statistical.learning"
-    footer = "&copy; [John Palowitch](https://stats.johnpalowitch.com) 2018 | [Github](https://github.com/jpalowitch) | [Twitter](https://twitter.com/JohnPalowitch) | Created with [blogdown](https://bookdown.org/yihui/blogdown):[ivy](https://github.com/yihui/hugo-ivy)"
+    footer = "&copy; [John Palowitch](https://stats.johnpalowitch.com) 2018 | [Github](https://github.com/jpalowitch) | [Twitter](https://twitter.com/JohnPalowitch) | [Google Research](https://ai.google/research/people/JohnPalowitch) | [Google Scholar](https://scholar.google.com/citations?user=fguoChwAAAAJ&hl=en&oi=sra) | Created with [blogdown](https://bookdown.org/yihui/blogdown):[ivy](https://github.com/yihui/hugo-ivy)"
 
   highlightjsVersion = "9.12.0"
   highlightjsCDN = "//cdn.bootcss.com"

@@ -13,6 +13,8 @@ I’m a Data Scientist at [Google](http://hooli.com/). In 2017 I completed a Ph.
 * __Palowitch, John__; Zhou, Yihui; Shabalin, Andrey; Zhou, Yihui; Nobel, Andrew B.; Wright, Fred A. “*Estimation of Interpretable eQTL Effect Sizes Using a Log of Linear Model*.” [Biometrics, 74(2), 2017](https://onlinelibrary.wiley.com/doi/abs/10.1111/biom.12810)
 * Wilson, James D.; __Palowitch, John__; Bhamidi, Shankar; Nobel, Andrew B. “*Significance Based Extraction in Multilayer Networks with Heterogeneous Community Structure*.” [Journal of Machine Learning Research, 18(149), 2017](http://www.jmlr.org/papers/v18/16-645.html)
 * Aguet, Francois; Wright, Fred A.; Lappalainen, Tulli; Ardlie, Kristin G.; Dermitzakis, Emmanouil T.; Brown, Christopher D.; Montgomery, Stephen D; __Palowitch, John__; the GTEx Consortium. “*Genetic effects on gene expression across human tisues*.” [Nature, 550, 2017](https://www.nature.com/articles/nature24277)
+* Saha, Ashis; ...; The GTEx Consortium; Engelhardt, Barbara E.; Battle, Alexis. "*Co-expression networks reveal the tissue-specific regulation of transcription and splicing*." [Genome Research, 28(7), 2018](https://genome.cshlp.org/content/early/2017/10/06/gr.216721.116.abstract)
+* Yang, Fan; Wang, Jiebia; The GTEx Consortium; Pierce, Brandon L.; Chen, Lin S. "*Identifying cis-mediators for trans-eQTLs across many human tissues using genomic mediation analysis.*" [Genome Research, 28(7), 2018](https://genome.cshlp.org/content/27/11/1859)
 
 ### Upcoming Conference Presentations
 * [SIAM NS18](https://www.siam.org/meetings/ns18/), July 12-13 2018
