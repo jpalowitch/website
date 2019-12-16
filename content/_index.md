@@ -8,7 +8,8 @@ I’m a Data Scientist at [Google](http://hooli.com/) working on graph clusterin
 
 ### Publications
 
-* __Palowitch, John__; "*Computing the statistical significance of optimized communities in networks.*" [arxiv/1807.02930](https://arxiv.org/abs/1807.02930)
+* __Palowitch, John__; Perozzi, Bryan; "*MONET: Debiasing Graph Embeddings via the Metadata-Orthogonal Training Unit*" [arxiv:1909.11793](https://arxiv.org/abs/1909.11793)
+* __Palowitch, John__; "*Computing the statistical significance of optimized communities in networks.*" [Nature Scientific Reports, 9, 2019](https://www.nature.com/articles/s41598-019-54708-8)
 * __Palowitch, John__; Bhamidi, Shankar; Nobel, Andrew B. “*Significance-based community detection in weighted networks*.” [Journal of Machine Learning Research, 18(188), 2018](http://www.jmlr.org/papers/v18/17-377.html)
 * __Palowitch, John__; Zhou, Yihui; Shabalin, Andrey; Zhou, Yihui; Nobel, Andrew B.; Wright, Fred A. “*Estimation of Interpretable eQTL Effect Sizes Using a Log of Linear Model*.” [Biometrics, 74(2), 2017](https://onlinelibrary.wiley.com/doi/abs/10.1111/biom.12810)
 * Wilson, James D.; __Palowitch, John__; Bhamidi, Shankar; Nobel, Andrew B. “*Significance Based Extraction in Multilayer Networks with Heterogeneous Community Structure*.” [Journal of Machine Learning Research, 18(149), 2017](http://www.jmlr.org/papers/v18/16-645.html)
