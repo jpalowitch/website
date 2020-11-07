@@ -20,10 +20,11 @@ I’m a Data Scientist at [Google](http://hooli.com/) working on graph clusterin
 * Yang, Fan; Wang, Jiebia; The GTEx Consortium; Pierce, Brandon L.; Chen, Lin S. "*Identifying cis-mediators for trans-eQTLs across many human tissues using genomic mediation analysis.*" [Genome Research, 28(7), 2018](https://genome.cshlp.org/content/27/11/1859)
 
 ### Upcoming Conference Presentations
-* [SIAM NS18](https://www.siam.org/meetings/ns18/), July 12-13 2018
+* [ASONAM 2020](http://asonam.cpsc.ucalgary.ca/2020/), December 7-10 2020
 
 ### Recent Conference Presentations
-
+* [SIAM NS20](https://www.siam.org/conferences/cm/conference/ns20), July 9-10 2020
+* [SIAM NS18](https://www.siam.org/meetings/ns18/), July 12-13 2018
 * [Data Institute SF Annual Conference](http://www.sfdatainstitute.org/conference.html), October 16-17 2017
 * [SIAM NS17](http://www.siam.org/meetings/ns17/), July 13-14 2017
 * [Conference on Statistical Learning and Data Science](http://www.unc.edu/~yfliu/sldm2016/index.html), June 6-8 2017
