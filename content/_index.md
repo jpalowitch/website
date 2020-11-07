@@ -8,6 +8,7 @@ I’m a Data Scientist at [Google](http://hooli.com/) working on graph clusterin
 
 ### Publications
 
+* Dewaskar, Miheer; __Palowitch, John__; He, Mark; Love, Michael; Nobel, Andrew B. "*Finding Stable Groups of Cross-Correlated Features in Multi-View data*" [arxiv:2009.05079](https://arxiv.org/pdf/2009.05079.pdf)
 * Tsitsulin, Anton; __Palowitch, John__; Perozzi, Bryan; Müller, Emmanuel. "*Graph Clustering with Graph Neural Networks*" [arxiv:2006.16904](https://arxiv.org/abs/2006.16904)
 * __Palowitch, John__; Perozzi, Bryan; "*MONET: Debiasing Graph Embeddings via the Metadata-Orthogonal Training Unit*" [arxiv:1909.11793](https://arxiv.org/abs/1909.11793)
 * __Palowitch, John__; "*Computing the statistical significance of optimized communities in networks.*" [Nature Scientific Reports, 9, 2019](https://www.nature.com/articles/s41598-019-54708-8)
