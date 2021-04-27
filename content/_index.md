@@ -4,13 +4,14 @@ title: Home
 
 <img src="me_presenting.jpeg" style="max-width:30%;min-width:120px;float:right;" alt="prez" />
 
-I’m a Data Scientist at [Google](http://hooli.com/) working on graph clustering algorithms, network embeddings, user behavior modeling, and natural language understanding. In 2017 I completed a Ph.D. in Statistics from the Department of Statistics and Operations Research (STOR) at UNC Chapel Hill. My research interests include machine learning methods for networks and computational genomics. My thesis advisors were [Andrew Nobel](http://nobel.web.unc.edu/) and [Shankar Bhamidi](http://shankarbhamidi.web.unc.edu/). Throughout my degree I was an active member of a working group in the [GTEX Project](https://commonfund.nih.gov/GTEx), and part of the [Probability Group at UNC](http://probabilitygroup.web.unc.edu/).
+I’m a Data Scientist at [Google](http://hooli.com/) working on graph neural networks, graph clustering, and generative graph models. In 2017 I received a Ph.D. in Statistics from the Department of Statistics and Operations Research (STOR) at UNC Chapel Hill, with a dissertation focusing on graph ML and computational genomics. My thesis advisors were [Andrew Nobel](http://nobel.web.unc.edu/) and [Shankar Bhamidi](http://shankarbhamidi.web.unc.edu/). Throughout my degree I was an active member of a working group in the [GTEX Project](https://commonfund.nih.gov/GTEx), and part of the [Probability Group at UNC](http://probabilitygroup.web.unc.edu/).
 
 ### Publications
 
+* Tsitsulin, Anton; Benedek, Rozemberczki; __Palowitch, John__; Perozzi, Bryan. "*Synthetic Graph Generation to Benchmark Graph Learning*" [WWW GLB '21](https://graph-learning-benchmarks.github.io/assets/papers/GLB_Synthetic_Graph_Generation_Benchmark.pdf)
 * Dewaskar, Miheer; __Palowitch, John__; He, Mark; Love, Michael; Nobel, Andrew B. "*Finding Stable Groups of Cross-Correlated Features in Multi-View data*" [arxiv:2009.05079](https://arxiv.org/pdf/2009.05079.pdf)
 * Tsitsulin, Anton; __Palowitch, John__; Perozzi, Bryan; Müller, Emmanuel. "*Graph Clustering with Graph Neural Networks*" [arxiv:2006.16904](https://arxiv.org/abs/2006.16904)
-* __Palowitch, John__; Perozzi, Bryan; "*MONET: Debiasing Graph Embeddings via the Metadata-Orthogonal Training Unit*" [arxiv:1909.11793](https://arxiv.org/abs/1909.11793)
+* __Palowitch, John__; Perozzi, Bryan; "*MONET: Debiasing Graph Embeddings via the Metadata-Orthogonal Training Unit*" [2020 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining (ASONAM)](https://ieeexplore.ieee.org/abstract/document/9381348)
 * __Palowitch, John__; "*Computing the statistical significance of optimized communities in networks.*" [Nature Scientific Reports, 9, 2019](https://www.nature.com/articles/s41598-019-54708-8)
 * __Palowitch, John__; Bhamidi, Shankar; Nobel, Andrew B. “*Significance-based community detection in weighted networks*.” [Journal of Machine Learning Research, 18(188), 2018](http://www.jmlr.org/papers/v18/17-377.html)
 * __Palowitch, John__; Zhou, Yihui; Shabalin, Andrey; Zhou, Yihui; Nobel, Andrew B.; Wright, Fred A. “*Estimation of Interpretable eQTL Effect Sizes Using a Log of Linear Model*.” [Biometrics, 74(2), 2017](https://onlinelibrary.wiley.com/doi/abs/10.1111/biom.12810)
@@ -19,11 +20,11 @@ I’m a Data Scientist at [Google](http://hooli.com/) working on graph clusterin
 * Saha, Ashis; ...; The GTEx Consortium; Engelhardt, Barbara E.; Battle, Alexis. "*Co-expression networks reveal the tissue-specific regulation of transcription and splicing*." [Genome Research, 28(7), 2018](https://genome.cshlp.org/content/early/2017/10/06/gr.216721.116.abstract)
 * Yang, Fan; Wang, Jiebia; The GTEx Consortium; Pierce, Brandon L.; Chen, Lin S. "*Identifying cis-mediators for trans-eQTLs across many human tissues using genomic mediation analysis.*" [Genome Research, 28(7), 2018](https://genome.cshlp.org/content/27/11/1859)
 
-### Upcoming Conference Presentations
+### Past Conference Presentations
 * [ASONAM 2020](http://asonam.cpsc.ucalgary.ca/2020/), December 7-10 2020
-
-### Recent Conference Presentations
+* [Graph Mining & Learning @ NEURIPS](https://gm-neurips-2020.github.io/), December 6 2020
 * [SIAM NS20](https://www.siam.org/conferences/cm/conference/ns20), July 9-10 2020
+* [Data Institute SF Annual Conference](http://www.sfdatainstitute.org/conference.html), March 11-12 2019
 * [SIAM NS18](https://www.siam.org/meetings/ns18/), July 12-13 2018
 * [Data Institute SF Annual Conference](http://www.sfdatainstitute.org/conference.html), October 16-17 2017
 * [SIAM NS17](http://www.siam.org/meetings/ns17/), July 13-14 2017
