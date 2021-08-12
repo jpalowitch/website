@@ -8,6 +8,7 @@ I’m a Data Scientist at [Google](http://hooli.com/) working on graph neural ne
 
 ### Publications
 
+* Huang, Di; Bartel, Jacob; __Palowitch, John__. "*Recurrent Graph Neural Networks for Rumor Detection in Online Forums*" [KDD MIS2 '21](http://claws.cc.gatech.edu/mis2-kdd2021) [(arxiv)](https://arxiv.org/abs/2108.03548)
 * Tsitsulin, Anton; Benedek, Rozemberczki; __Palowitch, John__; Perozzi, Bryan. "*Synthetic Graph Generation to Benchmark Graph Learning*" [WWW GLB '21](https://graph-learning-benchmarks.github.io/assets/papers/GLB_Synthetic_Graph_Generation_Benchmark.pdf)
 * Dewaskar, Miheer; __Palowitch, John__; He, Mark; Love, Michael; Nobel, Andrew B. "*Finding Stable Groups of Cross-Correlated Features in Multi-View data*" [arxiv:2009.05079](https://arxiv.org/pdf/2009.05079.pdf)
 * Tsitsulin, Anton; __Palowitch, John__; Perozzi, Bryan; Müller, Emmanuel. "*Graph Clustering with Graph Neural Networks*" [arxiv:2006.16904](https://arxiv.org/abs/2006.16904)
