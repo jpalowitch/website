@@ -8,6 +8,7 @@ I’m a Research Scientist at [Google](http://hooli.com/) working on graph learn
 
 ### Publications
 
+* Yoon, Minji; __Palowitch, John__; Zelle, Dustin; Hu, Ziniu; Salakhutdinov, Rusl; Perozzi, Bryan. "*Zero-shot Domain Adaptation of Heterogeneous Graphs via Knowledge Transfer Networks*" [(arxiv)](https://arxiv.org/abs/2203.02018)
 * __Palowitch, John__; Tsitsulin, Anton; Mayer, Brandon; Perozzi, Bryan. "*GraphWorld: Fake Graphs Bring Real Insights For GNNs*" [(arxiv)](https://arxiv.org/abs/2203.00112)
 * Huang, Di; Bartel, Jacob; __Palowitch, John__. "*Recurrent Graph Neural Networks for Rumor Detection in Online Forums*" [KDD MIS2 '21](http://claws.cc.gatech.edu/mis2-kdd2021) [(arxiv)](https://arxiv.org/abs/2108.03548)
 * Tsitsulin, Anton; Benedek, Rozemberczki; __Palowitch, John__; Perozzi, Bryan. "*Synthetic Graph Generation to Benchmark Graph Learning*" [WWW GLB '21](https://graph-learning-benchmarks.github.io/assets/papers/GLB_Synthetic_Graph_Generation_Benchmark.pdf)
