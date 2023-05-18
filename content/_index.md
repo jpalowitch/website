@@ -2,7 +2,7 @@
 title: Home
 ---
 
-<img src="PXL_20210213_225934642.jpg" style="max-width:30%;min-width:120px;float:right;" alt="prez" />
+<img src="DSC_3738.JPG" style="max-width:30%;min-width:120px;float:right;" alt="John on a boat in the San Francisco bay" />
 
 I’m a Research Scientist at [Google](http://hooli.com/) working on graph learning and social networks. In 2017 I received a Ph.D. in Statistics from the Department of Statistics and Operations Research (STOR) at UNC Chapel Hill, with a dissertation focusing on graph ML and computational genomics. My thesis advisors were [Andrew Nobel](http://nobel.web.unc.edu/) and [Shankar Bhamidi](http://shankarbhamidi.web.unc.edu/). Throughout my degree I was an active member of a working group in the [GTEX Project](https://commonfund.nih.gov/GTEx), and part of the [Probability Group at UNC](http://probabilitygroup.web.unc.edu/).
 
