@@ -8,7 +8,8 @@ I’m a Research Scientist at [Google](http://hooli.com/) working on graph learn
 
 ### Publications
 
-* Yoon, Minji; __Palowitch, John__; Zelle, Dustin; Hu, Ziniu; Salakhutdinov, Rusl; Perozzi, Bryan. "*Zero-shot Domain Adaptation of Heterogeneous Graphs via Knowledge Transfer Networks*" [NeurIPS 2022](https://proceedings.neurips.cc/paper_files/paper/2022/file/af2bb2b2280d36f8842e440b4e275152-Paper-Conference.pdf)
+* Yoon, Minji; Wu, Yue; __Palowitch, John__; Perozzi, Bryan; Salakhutdinov, Russ. "*Graph generative model for benchmarking graph neural networks*" [ICLR 2023](https://dl.acm.org/doi/10.5555/3618408.3620088)
+* Yoon, Minji; __Palowitch, John__; Zelle, Dustin; Hu, Ziniu; Salakhutdinov, Russ; Perozzi, Bryan. "*Zero-shot Domain Adaptation of Heterogeneous Graphs via Knowledge Transfer Networks*" [NeurIPS 2022](https://proceedings.neurips.cc/paper_files/paper/2022/file/af2bb2b2280d36f8842e440b4e275152-Paper-Conference.pdf)
 * __Palowitch, John__; Tsitsulin, Anton; Mayer, Brandon; Perozzi, Bryan. "*GraphWorld: Fake Graphs Bring Real Insights For GNNs*" [KDD 2022](https://dl.acm.org/doi/abs/10.1145/3534678.3539203)
 * Huang, Di; Bartel, Jacob; __Palowitch, John__. "*Recurrent Graph Neural Networks for Rumor Detection in Online Forums*" [KDD MIS2 '21](http://claws.cc.gatech.edu/mis2-kdd2021) [(arxiv)](https://arxiv.org/abs/2108.03548)
 * Tsitsulin, Anton; Benedek, Rozemberczki; __Palowitch, John__; Perozzi, Bryan. "*Synthetic Graph Generation to Benchmark Graph Learning*" [WWW GLB '21](https://graph-learning-benchmarks.github.io/assets/papers/GLB_Synthetic_Graph_Generation_Benchmark.pdf)
