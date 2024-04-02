@@ -4,7 +4,13 @@ title: Home
 
 <img src="DSC_3738.JPG" style="max-width:30%;min-width:120px;float:right;" alt="John on a boat in the San Francisco bay" />
 
-I’m a Research Scientist at [Google](http://hooli.com/) working on graph learning and social networks. In 2017 I received a Ph.D. in Statistics from the Department of Statistics and Operations Research (STOR) at UNC Chapel Hill, with a dissertation focusing on graph ML and computational genomics. My thesis advisors were [Andrew Nobel](http://nobel.web.unc.edu/) and [Shankar Bhamidi](http://shankarbhamidi.web.unc.edu/). Throughout my degree I was an active member of a working group in the [GTEX Project](https://commonfund.nih.gov/GTEx), and part of the [Probability Group at UNC](http://probabilitygroup.web.unc.edu/).
+[![Ceasefire Now](https://badge.techforpalestine.org/default)](https://techforpalestine.org/learn-more)
+
+I’m a Research Scientist at [Google](http://hooli.com/) working on natural language, graph learning, and social networks. In general I'm interested in what can be learned from where & when information travels on the web. After an undergrad in math I did a doctorate degree in statistics at UNC Chapel Hill with a [dissertation](https://cdr.lib.unc.edu/downloads/3j3333508) focused on community detection. My advisors were [Andrew Nobel](http://nobel.web.unc.edu/) and [Shankar Bhamidi](http://shankarbhamidi.web.unc.edu/). For much of my degree I was an active member of a working group in the [GTEX Project](https://commonfund.nih.gov/GTEx) led by Andrew and [Fred Wright](https://statistics.sciences.ncsu.edu/people/fawrigh2/).
+
+I made this site in grad school to showcase my main project, CCME. Nowadays there are much better ways to do graph clustering, and I maintain this site mainly as a way to maintain the SEO of my name. The lists of publications and talks below are out-of-date and will probably stay that way. The full list of my work is of course on [Google Scholar](https://scholar.google.com/citations?user=fguoChwAAAAJ&hl=en), and you can find me in Google corp spaces such as [my persons page](https://research.google/people/john-palowitch/) and [this blog post](https://blog.research.google/2022/05/graphworld-advances-in-graph.html).
+
+I also have a second life as a musician. If you're in the Bay Area and you like jazz, R&B, and hip-hop, come see me play: [jpalomusic.com](https://www.jpalomusic.com).
 
 ### Publications
 
